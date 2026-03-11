@@ -224,7 +224,6 @@ function KpiCard({ icon: Icon, label, value, sub, accentColor, bgTint, onClick, 
         background: '#FFFFFF',
         border: `1px solid ${hovered ? accentColor + '40' : '#E8E4DE'}`,
         borderRadius: '16px',
-        padding: '20px 20px 16px',
         cursor: onClick ? 'pointer' : 'default',
         boxShadow: hovered ? SHADOW_HOVER : SHADOW_CARD,
         transition: 'all 0.2s ease',
@@ -246,25 +245,28 @@ function KpiCard({ icon: Icon, label, value, sub, accentColor, bgTint, onClick, 
       }} />
 
       {/* Animated bottom accent line */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0,
-        height: '3px', borderRadius: '0 0 0 16px',
-        background: accentColor,
-        width: hovered ? '100%' : '32px',
-        transition: 'width 0.3s ease',
-      }} />
+      <div
+        className="kpi-accent-line"
+        style={{
+          background: accentColor,
+          width: hovered ? '100%' : '32px',
+        }}
+      />
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div className="kpi-card-inner" style={{ position: 'relative', zIndex: 1 }}>
         {/* Icon row */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <div style={{
-            width: '38px', height: '38px', borderRadius: '10px',
-            backgroundColor: bgTint,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: `1px solid ${accentColor}20`,
-            transition: 'transform 0.2s ease',
-            transform: hovered ? 'scale(1.08)' : 'scale(1)',
-          }}>
+        <div
+          className="kpi-icon-row"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}
+        >
+          <div
+            className="kpi-icon-box"
+            style={{
+              backgroundColor: bgTint,
+              border: `1px solid ${accentColor}20`,
+              transform: hovered ? 'scale(1.08)' : 'scale(1)',
+            }}
+          >
             <Icon size={17} style={{ color: accentColor }} />
           </div>
           {onClick && (
@@ -280,17 +282,13 @@ function KpiCard({ icon: Icon, label, value, sub, accentColor, bgTint, onClick, 
         {loading ? (
           <SkeletonBlock w="60%" h="36px" radius="8px" />
         ) : (
-          <p style={{
-            fontFamily: displayFont, fontSize: '2.5rem', fontWeight: 700,
-            color: '#1A1714', lineHeight: 1.05, letterSpacing: '-0.02em',
-            marginBottom: '2px',
-          }}>
+          <p className="kpi-value">
             {value}
           </p>
         )}
 
         {/* Label */}
-        <p style={{ fontFamily: uiFont, fontSize: '13px', fontWeight: 600, color: '#5C5550', marginBottom: '4px' }}>
+        <p className="kpi-label">
           {label}
         </p>
 
@@ -298,7 +296,7 @@ function KpiCard({ icon: Icon, label, value, sub, accentColor, bgTint, onClick, 
         {loading ? (
           <SkeletonBlock w="80%" h="12px" radius="4px" />
         ) : (
-          <p style={{ fontFamily: uiFont, fontSize: '12px', color: '#9B9590', lineHeight: 1.4 }}>
+          <p className="kpi-sub">
             {sub}
           </p>
         )}
@@ -336,10 +334,6 @@ function CtaCard({
         background: '#FFFFFF',
         border: `1px solid ${hovered ? buttonColor + '30' : '#E8E4DE'}`,
         borderRadius: '16px',
-        padding: '24px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '20px',
         boxShadow: hovered ? SHADOW_HOVER : SHADOW_CARD,
         transition: 'all 0.2s ease',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
@@ -357,14 +351,16 @@ function CtaCard({
         pointerEvents: 'none',
       }} />
 
+      {/* Inner layout wrapper */}
+      <div className="cta-card-inner">
+
       {/* SVG container */}
-      <div style={{
-        flexShrink: 0, width: '80px', height: '80px',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        position: 'relative', zIndex: 1,
-        transition: 'transform 0.2s ease',
-        transform: hovered ? 'scale(1.05)' : 'scale(1)',
-      }}>
+      <div
+        className="cta-svg-container"
+        style={{
+          transform: hovered ? 'scale(1.05)' : 'scale(1)',
+        }}
+      >
         {svgIllustration}
       </div>
 
@@ -413,6 +409,8 @@ function CtaCard({
           <ChevronRight size={13} />
         </button>
       </div>
+
+      </div>{/* end cta-card-inner */}
     </div>
   );
 }
@@ -575,7 +573,7 @@ export default function Dashboard() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-      {/* ── Keyframe styles ─────────────────────────────────────────────────── */}
+      {/* ── Keyframe styles + responsive overrides ──────────────────────────── */}
       <style>{`
         @keyframes shimmer {
           0% { background-position: 200% 0; }
@@ -589,23 +587,165 @@ export default function Dashboard() {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-6px); }
         }
+
+        /* ── KPI grid: 2 cols mobile, 4 cols desktop ── */
+        .kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 14px;
+        }
+        @media (max-width: 767px) {
+          .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+          }
+        }
+
+        /* ── KPI card responsive sizing ── */
+        .kpi-value {
+          font-family: 'Cabinet Grotesk', 'Satoshi', system-ui, sans-serif;
+          font-size: 2.5rem;
+          font-weight: 700;
+          color: #1A1714;
+          line-height: 1.05;
+          letter-spacing: -0.02em;
+          margin-bottom: 2px;
+        }
+        .kpi-label {
+          font-family: 'Satoshi', system-ui, sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          color: #5C5550;
+          margin-bottom: 4px;
+        }
+        .kpi-sub {
+          font-family: 'Satoshi', system-ui, sans-serif;
+          font-size: 12px;
+          color: #9B9590;
+          line-height: 1.4;
+        }
+        .kpi-card-inner {
+          padding: 20px 20px 16px;
+        }
+        .kpi-icon-box {
+          width: 38px;
+          height: 38px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.2s ease;
+        }
+        .kpi-accent-line {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          height: 3px;
+          border-radius: 0 0 0 16px;
+          transition: width 0.3s ease;
+        }
+        @media (max-width: 767px) {
+          .kpi-value {
+            font-size: 1.5rem;
+            margin-bottom: 1px;
+          }
+          .kpi-label {
+            font-size: 11px;
+            margin-bottom: 2px;
+          }
+          .kpi-sub {
+            font-size: 10px;
+          }
+          .kpi-card-inner {
+            padding: 12px 14px 10px;
+          }
+          .kpi-icon-box {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+          }
+          .kpi-icon-row {
+            margin-bottom: 8px !important;
+          }
+          .kpi-accent-line {
+            height: 2px;
+          }
+        }
+
+        /* ── Hero section responsive ── */
+        .hero-barrel {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 160px;
+          position: relative;
+          z-index: 1;
+          flex-shrink: 0;
+          animation: float-barrel 4s ease-in-out infinite;
+        }
+        @media (max-width: 639px) {
+          .hero-barrel {
+            display: none;
+          }
+          .hero-section {
+            padding: 20px 20px !important;
+            min-height: 120px !important;
+          }
+          .hero-heading {
+            font-size: 18px !important;
+          }
+        }
+
+        /* ── CTA cards responsive ── */
+        .cta-svg-container {
+          flex-shrink: 0;
+          width: 80px;
+          height: 80px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          z-index: 1;
+          transition: transform 0.2s ease;
+        }
+        .cta-card-inner {
+          padding: 24px;
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+        @media (max-width: 767px) {
+          .cta-svg-container {
+            display: none;
+          }
+          .cta-card-inner {
+            padding: 16px;
+            gap: 8px;
+          }
+          .cta-cards-list {
+            gap: 8px !important;
+          }
+        }
       `}</style>
 
       {/* ══════════════════════════════════════════════════════════════════════
           1. HERO SECTION
       ══════════════════════════════════════════════════════════════════════ */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1A1714 0%, #2D1A20 45%, #3D1028 100%)',
-        borderRadius: '20px',
-        padding: '32px 36px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'relative',
-        overflow: 'hidden',
-        boxShadow: SHADOW_ELEVATED,
-        minHeight: '160px',
-      }}>
+      <div
+        className="hero-section"
+        style={{
+          background: 'linear-gradient(135deg, #1A1714 0%, #2D1A20 45%, #3D1028 100%)',
+          borderRadius: '20px',
+          padding: '32px 36px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'relative',
+          overflow: 'hidden',
+          boxShadow: SHADOW_ELEVATED,
+          minHeight: '160px',
+        }}
+      >
         {/* Background texture lines */}
         <div style={{
           position: 'absolute', inset: 0,
@@ -654,15 +794,18 @@ export default function Dashboard() {
           </div>
 
           {/* Display heading */}
-          <h1 style={{
-            fontFamily: displayFont,
-            fontSize: 'clamp(22px, 2.5vw, 30px)',
-            fontWeight: 700,
-            color: '#FFFFFF',
-            letterSpacing: '-0.02em',
-            lineHeight: 1.2,
-            marginBottom: '8px',
-          }}>
+          <h1
+            className="hero-heading"
+            style={{
+              fontFamily: displayFont,
+              fontSize: 'clamp(22px, 2.5vw, 30px)',
+              fontWeight: 700,
+              color: '#FFFFFF',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.2,
+              marginBottom: '8px',
+            }}
+          >
             Bienvenue dans votre Cuverie
           </h1>
           <p style={{
@@ -675,12 +818,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right: Barrel illustration */}
-        <div style={{
-          position: 'relative', zIndex: 1, flexShrink: 0,
-          animation: 'float-barrel 4s ease-in-out infinite',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: '160px',
-        }}>
+        <div className="hero-barrel">
           <BarrelSVG />
         </div>
       </div>
@@ -688,11 +826,7 @@ export default function Dashboard() {
       {/* ══════════════════════════════════════════════════════════════════════
           2. KPI STRIP — 4 cards
       ══════════════════════════════════════════════════════════════════════ */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '14px',
-      }}>
+      <div className="kpi-grid">
         <KpiCard
           icon={Wine} label="Lots actifs" accentColor="#8B1A2F" bgTint="#FDF2F4"
           loading={statsLoading}
@@ -744,7 +878,7 @@ export default function Dashboard() {
           background: 'linear-gradient(90deg, #8B1A2F, #D97706)',
         }} />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="cta-cards-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <CtaCard
           svgIllustration={<LotTraceSVG />}
           title="Lots & Traçabilité"
