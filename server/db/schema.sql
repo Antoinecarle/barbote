@@ -328,13 +328,194 @@ CREATE TABLE IF NOT EXISTS barbote_notifications (
 
 CREATE INDEX IF NOT EXISTS idx_lots_status ON barbote_lots(status);
 CREATE INDEX IF NOT EXISTS idx_lots_vintage ON barbote_lots(vintage_year);
+CREATE INDEX IF NOT EXISTS idx_lots_appellation ON barbote_lots(appellation);
 CREATE INDEX IF NOT EXISTS idx_movements_lot ON barbote_movements(lot_id);
 CREATE INDEX IF NOT EXISTS idx_movements_date ON barbote_movements(date);
 CREATE INDEX IF NOT EXISTS idx_movements_type ON barbote_movements(movement_type);
+CREATE INDEX IF NOT EXISTS idx_movements_validated ON barbote_movements(validated);
 CREATE INDEX IF NOT EXISTS idx_analyses_lot ON barbote_analyses(lot_id);
 CREATE INDEX IF NOT EXISTS idx_analyses_date ON barbote_analyses(analysis_date);
+CREATE INDEX IF NOT EXISTS idx_analyses_free_so2 ON barbote_analyses(free_so2_mgl);
 CREATE INDEX IF NOT EXISTS idx_lot_containers_current ON barbote_lot_containers(lot_id, is_current);
 CREATE INDEX IF NOT EXISTS idx_audit_table ON barbote_audit_log(table_name, record_id);
+CREATE INDEX IF NOT EXISTS idx_audit_user ON barbote_audit_log(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON barbote_audit_log(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_messages_conversation ON barbote_messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_containers_status ON barbote_containers(status);
 CREATE INDEX IF NOT EXISTS idx_operations_lot ON barbote_operations(lot_id);
+CREATE INDEX IF NOT EXISTS idx_operations_date ON barbote_operations(date);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON barbote_notifications(user_id, read);
+
+-- =============================================================================
+-- AUDIT TRIGGER FUNCTION
+-- Automatically logs INSERT/UPDATE/DELETE on critical tables
+-- =============================================================================
+
+CREATE OR REPLACE FUNCTION barbote_audit_trigger_fn()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    INSERT INTO barbote_audit_log (table_name, record_id, action, old_data, new_data)
+    VALUES (TG_TABLE_NAME, NEW.id, 'INSERT', NULL, to_jsonb(NEW));
+    RETURN NEW;
+  ELSIF TG_OP = 'UPDATE' THEN
+    INSERT INTO barbote_audit_log (table_name, record_id, action, old_data, new_data)
+    VALUES (TG_TABLE_NAME, NEW.id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    INSERT INTO barbote_audit_log (table_name, record_id, action, old_data, new_data)
+    VALUES (TG_TABLE_NAME, OLD.id, 'DELETE', to_jsonb(OLD), NULL);
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply audit triggers to critical tables
+DO $$
+BEGIN
+  -- Lots
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'audit_barbote_lots') THEN
+    CREATE TRIGGER audit_barbote_lots
+    AFTER INSERT OR UPDATE OR DELETE ON barbote_lots
+    FOR EACH ROW EXECUTE FUNCTION barbote_audit_trigger_fn();
+  END IF;
+  -- Movements (append-only but track deletions in case of admin override)
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'audit_barbote_movements') THEN
+    CREATE TRIGGER audit_barbote_movements
+    AFTER INSERT OR UPDATE OR DELETE ON barbote_movements
+    FOR EACH ROW EXECUTE FUNCTION barbote_audit_trigger_fn();
+  END IF;
+  -- Analyses
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'audit_barbote_analyses') THEN
+    CREATE TRIGGER audit_barbote_analyses
+    AFTER INSERT OR UPDATE OR DELETE ON barbote_analyses
+    FOR EACH ROW EXECUTE FUNCTION barbote_audit_trigger_fn();
+  END IF;
+  -- Operations (sulfitage, chaptalisation, etc.)
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'audit_barbote_operations') THEN
+    CREATE TRIGGER audit_barbote_operations
+    AFTER INSERT OR UPDATE OR DELETE ON barbote_operations
+    FOR EACH ROW EXECUTE FUNCTION barbote_audit_trigger_fn();
+  END IF;
+END;
+$$;
+
+-- =============================================================================
+-- UPDATED_AT TRIGGER FUNCTION
+-- Automatically updates updated_at on modification
+-- =============================================================================
+
+CREATE OR REPLACE FUNCTION barbote_updated_at_fn()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'set_updated_at_lots') THEN
+    CREATE TRIGGER set_updated_at_lots
+    BEFORE UPDATE ON barbote_lots
+    FOR EACH ROW EXECUTE FUNCTION barbote_updated_at_fn();
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'set_updated_at_containers') THEN
+    CREATE TRIGGER set_updated_at_containers
+    BEFORE UPDATE ON barbote_containers
+    FOR EACH ROW EXECUTE FUNCTION barbote_updated_at_fn();
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'set_updated_at_movements') THEN
+    CREATE TRIGGER set_updated_at_movements
+    BEFORE UPDATE ON barbote_movements
+    FOR EACH ROW EXECUTE FUNCTION barbote_updated_at_fn();
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'set_updated_at_operations') THEN
+    CREATE TRIGGER set_updated_at_operations
+    BEFORE UPDATE ON barbote_operations
+    FOR EACH ROW EXECUTE FUNCTION barbote_updated_at_fn();
+  END IF;
+END;
+$$;
+
+-- =============================================================================
+-- SO2 ALERT VIEW — Lots with low free SO2 (< 20 mg/L)
+-- =============================================================================
+
+CREATE OR REPLACE VIEW barbote_so2_alerts AS
+SELECT
+  l.id as lot_id,
+  l.lot_number,
+  l.name as lot_name,
+  l.type as wine_type,
+  l.appellation,
+  l.current_volume_liters,
+  a.free_so2_mgl,
+  a.total_so2_mgl,
+  a.analysis_date,
+  CASE
+    WHEN a.free_so2_mgl < 10 THEN 'critical'
+    WHEN a.free_so2_mgl < 20 THEN 'warning'
+    ELSE 'ok'
+  END as alert_level
+FROM barbote_lots l
+JOIN LATERAL (
+  SELECT free_so2_mgl, total_so2_mgl, analysis_date
+  FROM barbote_analyses
+  WHERE lot_id = l.id
+  ORDER BY analysis_date DESC
+  LIMIT 1
+) a ON true
+WHERE l.status = 'active'
+  AND a.free_so2_mgl IS NOT NULL
+  AND a.free_so2_mgl < 20;
+
+-- =============================================================================
+-- VOLUME BALANCE CHECK FUNCTION
+-- Returns discrepancy for a lot (should be 0)
+-- =============================================================================
+
+CREATE OR REPLACE FUNCTION barbote_check_volume_balance(p_lot_id UUID)
+RETURNS TABLE(
+  lot_id UUID,
+  lot_number VARCHAR,
+  initial_volume DECIMAL,
+  current_volume DECIMAL,
+  computed_volume DECIMAL,
+  discrepancy DECIMAL
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    l.id,
+    l.lot_number,
+    l.initial_volume_liters,
+    l.current_volume_liters,
+    COALESCE(
+      l.initial_volume_liters +
+      SUM(CASE
+        WHEN m.movement_type IN ('entree') THEN m.volume_liters
+        WHEN m.movement_type IN ('sortie', 'perte', 'bottling') THEN -m.volume_liters
+        WHEN m.movement_type = 'transfert' THEN
+          CASE WHEN m.to_container_id IS NOT NULL AND m.from_container_id IS NOT NULL THEN 0
+               WHEN m.lot_id = l.id THEN 0
+               ELSE 0 END
+        ELSE 0
+      END),
+      l.initial_volume_liters
+    ) as computed_volume,
+    ABS(l.current_volume_liters - COALESCE(
+      l.initial_volume_liters + SUM(CASE
+        WHEN m.movement_type = 'entree' THEN m.volume_liters
+        WHEN m.movement_type IN ('sortie', 'perte', 'bottling') THEN -m.volume_liters
+        ELSE 0
+      END),
+      l.initial_volume_liters
+    )) as discrepancy
+  FROM barbote_lots l
+  LEFT JOIN barbote_movements m ON m.lot_id = l.id
+  WHERE l.id = p_lot_id
+  GROUP BY l.id, l.lot_number, l.initial_volume_liters, l.current_volume_liters;
+END;
+$$ LANGUAGE plpgsql;
