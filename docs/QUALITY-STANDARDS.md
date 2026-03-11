@@ -66,8 +66,9 @@ Scopes: auth, lots, movements, analyses, assemblage, ai, maintenance, ci, db, fr
 | `__tests__/ai-service.test.js` | 9 | `calculateAssemblageFallback`, weighted analysis |
 | `__tests__/imports.test.js` | 18 | CSV parsing, column mapping, volume parsing |
 | `__tests__/volume-balance.test.js` | 18 | Volume invariant, SO₂ alerts, VA compliance |
+| `__tests__/rbac.test.js` | 24 | RBAC permission matrix, requirePermission, hasPermission |
 
-**Total: 45 tests — tous passants**
+**Total: 69 tests — tous passants**
 
 ---
 
