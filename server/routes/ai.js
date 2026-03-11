@@ -113,7 +113,7 @@ router.post('/chat', verifyToken, async (req, res) => {
       model: 'gpt-5-mini-2025-08-07',
       messages,
       stream: true,
-      max_tokens: 2000
+      max_completion_tokens: 2000
     });
 
     let fullResponse = '';
@@ -212,7 +212,7 @@ router.post('/assemblage', verifyToken, async (req, res) => {
               { role: 'system', content: 'Tu es oenologue expert. Réponds UNIQUEMENT en JSON valide sans markdown.' },
               { role: 'user', content: promptContent },
             ],
-            max_tokens: 3000,
+            max_completion_tokens: 3000,
             response_format: { type: 'json_object' },
           });
           return JSON.parse(response.choices[0].message.content);
@@ -308,7 +308,7 @@ ANALYSES RÉCENTES: ${JSON.stringify(analysesRes.rows)}`;
         { role: 'system', content: WINE_SYSTEM_PROMPT + '\n' + context },
         { role: 'user', content: question }
       ],
-      max_tokens: 1500
+      max_completion_tokens: 1500
     });
 
     res.json({
@@ -373,7 +373,7 @@ ${transcript}
         { role: 'system', content: 'Tu es oenologue expert. Génère des synthèses professionnelles en Markdown structuré.' },
         { role: 'user', content: synthesisPrompt }
       ],
-      max_tokens: 2500
+      max_completion_tokens: 2500
     });
 
     const content = aiRes.choices[0].message.content;
