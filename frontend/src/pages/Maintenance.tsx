@@ -9,8 +9,8 @@ const MAINTENANCE_TYPES: Record<string, string> = {
 };
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  planifie:    { label: 'Planifié',    bg: '#F3F4F6', text: '#4B5563', border: '#E5E7EB' },
-  planned:     { label: 'Planifié',    bg: '#F3F4F6', text: '#4B5563', border: '#E5E7EB' },
+  planifie:    { label: 'Planifié',    bg: '#F0EDE8', text: '#5C5550', border: '#E8E4DE' },
+  planned:     { label: 'Planifié',    bg: '#F0EDE8', text: '#5C5550', border: '#E8E4DE' },
   en_cours:    { label: 'En cours',    bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
   in_progress: { label: 'En cours',    bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
   termine:     { label: 'Terminé',     bg: '#F0FDF4', text: '#15803D', border: '#BBF7D0' },
@@ -20,7 +20,7 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; b
 };
 
 function getStatusConf(status: string) {
-  return STATUS_CONFIG[status] || { label: status, bg: '#F3F4F6', text: '#4B5563', border: '#E5E7EB' };
+  return STATUS_CONFIG[status] || { label: status, bg: '#F0EDE8', text: '#5C5550', border: '#E8E4DE' };
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -70,17 +70,20 @@ export default function Maintenance() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F5F3EF]">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <h1
+              className="text-2xl font-bold text-[#1A1714] tracking-tight flex items-center gap-2"
+              style={{ fontFamily: "'Cabinet Grotesk', 'Satoshi', sans-serif" }}
+            >
               <Wrench size={22} className="text-[#8B1A2F]" />
               Maintenance
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-[#5C5550] mt-1">
               Maintenance et entretien des contenants
               {overdueCount > 0 && (
                 <span className="ml-2 inline-flex items-center gap-1 text-red-600 font-medium">
@@ -105,11 +108,11 @@ export default function Maintenance() {
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Total', value: filtered.length, color: '#6B7280', bg: '#F3F4F6' },
+            { label: 'Total', value: filtered.length, color: '#5C5550', bg: '#F0EDE8' },
             {
               label: 'Planifiées',
               value: filtered.filter((m: any) => m.status === 'planifie' || m.status === 'planned').length,
-              color: '#4B5563', bg: '#F3F4F6'
+              color: '#5C5550', bg: '#F0EDE8'
             },
             {
               label: 'En cours',
@@ -124,9 +127,9 @@ export default function Maintenance() {
           ].map(stat => (
             <div
               key={stat.label}
-              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
+              className="bg-white border border-[#E8E4DE] rounded-xl p-4 shadow-sm"
             >
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">{stat.label}</p>
+              <p className="text-xs font-medium text-[#5C5550] uppercase tracking-wide mb-2">{stat.label}</p>
               <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
             </div>
           ))}
@@ -135,7 +138,7 @@ export default function Maintenance() {
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-3">
           <select
-            className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors"
+            className="bg-white border border-[#E8E4DE] rounded-lg px-3 py-2 text-sm text-[#1A1714] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors"
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value)}
           >
@@ -146,13 +149,13 @@ export default function Maintenance() {
             <option value="en_retard">En retard</option>
           </select>
 
-          <div className="ml-auto flex items-center gap-1 bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
+          <div className="ml-auto flex items-center gap-1 bg-white border border-[#E8E4DE] rounded-lg p-1 shadow-sm">
             <button
               onClick={() => setViewMode('table')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
                 viewMode === 'table'
                   ? 'bg-[#8B1A2F] text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  : 'text-[#5C5550] hover:text-[#1A1714] hover:bg-[#F0EDE8]'
               }`}
             >
               <List size={14} />
@@ -163,7 +166,7 @@ export default function Maintenance() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
                 viewMode === 'calendar'
                   ? 'bg-[#8B1A2F] text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  : 'text-[#5C5550] hover:text-[#1A1714] hover:bg-[#F0EDE8]'
               }`}
             >
               <Calendar size={14} />
@@ -174,38 +177,38 @@ export default function Maintenance() {
 
         {/* Table View */}
         {viewMode === 'table' && (
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-white border border-[#E8E4DE] rounded-xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
             <table className="w-full min-w-[600px]">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Contenant</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Type maintenance</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Description</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Date prévue</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Date réalisée</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Responsable</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
+                <tr className="bg-[#F9F8F6] border-b border-[#E8E4DE]">
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#5C5550] uppercase tracking-wide">Contenant</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#5C5550] uppercase tracking-wide">Type maintenance</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#5C5550] uppercase tracking-wide">Description</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#5C5550] uppercase tracking-wide">Date prévue</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#5C5550] uppercase tracking-wide">Date réalisée</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#5C5550] uppercase tracking-wide">Responsable</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#5C5550] uppercase tracking-wide">Statut</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[#E8E4DE]">
                 {isLoading ? (
                   Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i}>
                       <td colSpan={7} className="px-4 py-3">
-                        <div className="h-4 bg-gray-100 rounded animate-pulse w-full" />
+                        <div className="h-4 bg-[#F0EDE8] rounded animate-pulse w-full" />
                       </td>
                     </tr>
                   ))
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="text-center py-16">
-                      <div className="flex flex-col items-center gap-3 text-gray-400">
-                        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-3 text-[#9B9590]">
+                        <div className="w-12 h-12 rounded-full bg-[#F0EDE8] flex items-center justify-center">
                           <Wrench size={22} />
                         </div>
-                        <p className="text-sm font-medium text-gray-500">Aucune maintenance planifiée</p>
-                        <p className="text-xs text-gray-400">Planifiez une maintenance pour commencer</p>
+                        <p className="text-sm font-medium text-[#5C5550]">Aucune maintenance planifiée</p>
+                        <p className="text-xs text-[#9B9590]">Planifiez une maintenance pour commencer</p>
                       </div>
                     </td>
                   </tr>
@@ -213,25 +216,25 @@ export default function Maintenance() {
                   filtered.map((m: any) => {
                     const overdue = isOverdue(m.scheduled_date, m.status);
                     return (
-                      <tr key={m.id} className={`hover:bg-gray-50 transition-colors duration-100 ${overdue ? 'bg-red-50/40' : ''}`}>
+                      <tr key={m.id} className={`hover:bg-[#F9F8F6] transition-colors duration-100 ${overdue ? 'bg-red-50/40' : ''}`}>
                         <td className="px-4 py-3">
-                          <p className="text-sm font-semibold text-gray-900">{m.container_code}</p>
+                          <p className="text-sm font-semibold text-[#1A1714]">{m.container_code}</p>
                           {m.container_name && (
-                            <p className="text-xs text-gray-500">{m.container_name}</p>
+                            <p className="text-xs text-[#5C5550]">{m.container_name}</p>
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-sm text-gray-700">
+                          <span className="text-sm text-[#5C5550]">
                             {MAINTENANCE_TYPES[m.maintenance_type] || m.maintenance_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-500 max-w-xs truncate">
-                          {m.description || <span className="text-gray-400">—</span>}
+                        <td className="px-4 py-3 text-sm text-[#5C5550] max-w-xs truncate">
+                          {m.description || <span className="text-[#9B9590]">—</span>}
                         </td>
                         <td className="px-4 py-3">
                           {m.scheduled_date ? (
                             <div className="flex items-center gap-1.5">
-                              <span className={`text-sm ${overdue ? 'text-red-600 font-medium' : 'text-gray-700'}`}>
+                              <span className={`text-sm ${overdue ? 'text-red-600 font-medium' : 'text-[#5C5550]'}`}>
                                 {new Date(m.scheduled_date).toLocaleDateString('fr-FR', {
                                   day: 'numeric', month: 'short', year: 'numeric'
                                 })}
@@ -239,19 +242,19 @@ export default function Maintenance() {
                               {overdue && <AlertTriangle size={12} className="text-red-500 shrink-0" />}
                             </div>
                           ) : (
-                            <span className="text-sm text-gray-400">—</span>
+                            <span className="text-sm text-[#9B9590]">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
+                        <td className="px-4 py-3 text-sm text-[#5C5550]">
                           {m.completed_date
                             ? new Date(m.completed_date).toLocaleDateString('fr-FR', {
                                 day: 'numeric', month: 'short', year: 'numeric'
                               })
-                            : <span className="text-gray-400">—</span>
+                            : <span className="text-[#9B9590]">—</span>
                           }
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          {m.technician || <span className="text-gray-400">—</span>}
+                        <td className="px-4 py-3 text-sm text-[#5C5550]">
+                          {m.technician || <span className="text-[#9B9590]">—</span>}
                         </td>
                         <td className="px-4 py-3">
                           <StatusBadge status={overdue ? 'en_retard' : m.status} />
@@ -270,50 +273,50 @@ export default function Maintenance() {
         {viewMode === 'calendar' && (
           <div className="space-y-6">
             {Object.keys(byMonth).length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-xl shadow-sm text-center py-16">
-                <div className="flex flex-col items-center gap-3 text-gray-400">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+              <div className="bg-white border border-[#E8E4DE] rounded-xl shadow-sm text-center py-16">
+                <div className="flex flex-col items-center gap-3 text-[#9B9590]">
+                  <div className="w-12 h-12 rounded-full bg-[#F0EDE8] flex items-center justify-center">
                     <Calendar size={22} />
                   </div>
-                  <p className="text-sm font-medium text-gray-500">Aucune maintenance planifiée</p>
+                  <p className="text-sm font-medium text-[#5C5550]">Aucune maintenance planifiée</p>
                 </div>
               </div>
             ) : (
               Object.entries(byMonth).map(([month, items]) => (
-                <div key={month} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                  <div className="px-5 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-700 capitalize">{month}</h3>
-                    <span className="text-xs text-gray-500">{items.length} tâche{items.length !== 1 ? 's' : ''}</span>
+                <div key={month} className="bg-white border border-[#E8E4DE] rounded-xl shadow-sm overflow-hidden">
+                  <div className="px-5 py-3 bg-[#F9F8F6] border-b border-[#E8E4DE] flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-[#1A1714] capitalize">{month}</h3>
+                    <span className="text-xs text-[#5C5550]">{items.length} tâche{items.length !== 1 ? 's' : ''}</span>
                   </div>
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-[#E8E4DE]">
                     {items.map((m: any) => {
                       const overdue = isOverdue(m.scheduled_date, m.status);
                       return (
-                        <div key={m.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors duration-100">
+                        <div key={m.id} className="flex items-center gap-4 px-5 py-4 hover:bg-[#F9F8F6] transition-colors duration-100">
                           <div className="text-center w-10 shrink-0">
-                            <p className="text-lg font-bold text-gray-900 leading-none">
+                            <p className="text-lg font-bold text-[#1A1714] leading-none">
                               {new Date(m.scheduled_date).getDate()}
                             </p>
-                            <p className="text-xs text-gray-400 uppercase">
+                            <p className="text-xs text-[#9B9590] uppercase">
                               {new Date(m.scheduled_date).toLocaleDateString('fr-FR', { weekday: 'short' })}
                             </p>
                           </div>
 
-                          <div className="w-px h-10 bg-gray-200 shrink-0" />
+                          <div className="w-px h-10 bg-[#E8E4DE] shrink-0" />
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="text-sm font-semibold text-gray-900">{m.container_code}</p>
-                              <span className="text-xs text-gray-400">·</span>
-                              <p className="text-sm text-gray-600">
+                              <p className="text-sm font-semibold text-[#1A1714]">{m.container_code}</p>
+                              <span className="text-xs text-[#9B9590]">·</span>
+                              <p className="text-sm text-[#5C5550]">
                                 {MAINTENANCE_TYPES[m.maintenance_type] || m.maintenance_type}
                               </p>
                             </div>
                             {m.description && (
-                              <p className="text-xs text-gray-500 mt-0.5 truncate">{m.description}</p>
+                              <p className="text-xs text-[#5C5550] mt-0.5 truncate">{m.description}</p>
                             )}
                             {m.technician && (
-                              <p className="text-xs text-gray-400 mt-0.5">{m.technician}</p>
+                              <p className="text-xs text-[#9B9590] mt-0.5">{m.technician}</p>
                             )}
                           </div>
 
@@ -367,17 +370,17 @@ function CreateMaintenanceModal({ onClose, onCreated }: { onClose: () => void; o
     }
   };
 
-  const inputClass = "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors";
-  const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+  const inputClass = "w-full bg-white border border-[#E8E4DE] rounded-lg px-3 py-2 text-sm text-[#1A1714] placeholder-[#9B9590] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors";
+  const labelClass = "block text-sm font-medium text-[#5C5550] mb-1";
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Planifier une maintenance</h2>
+      <div className="bg-white rounded-xl border border-[#E8E4DE] shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8E4DE]">
+          <h2 className="text-lg font-semibold text-[#1A1714]">Planifier une maintenance</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="p-1.5 rounded-lg text-[#9B9590] hover:text-[#5C5550] hover:bg-[#F0EDE8] transition-colors"
           >
             <X size={16} />
           </button>
@@ -466,7 +469,7 @@ function CreateMaintenanceModal({ onClose, onCreated }: { onClose: () => void; o
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm transition-all duration-200"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-[#5C5550] bg-white border border-[#E8E4DE] hover:bg-[#F9F8F6] shadow-sm transition-all duration-200"
               >
                 Annuler
               </button>

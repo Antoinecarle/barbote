@@ -85,14 +85,19 @@ export default function Lots() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F5F3EF]">
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
 
         {/* Page header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Lots de vin</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Gérez vos lots de vinification</p>
+            <h1
+              className="text-2xl font-semibold tracking-tight"
+              style={{ color: '#1A1714', fontFamily: "'Cabinet Grotesk', 'Satoshi', system-ui, sans-serif" }}
+            >
+              Lots de vin
+            </h1>
+            <p className="text-sm mt-0.5" style={{ color: '#9B9590' }}>Gérez vos lots de vinification</p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
@@ -134,20 +139,24 @@ export default function Lots() {
         {/* Toolbar */}
         <div className="flex flex-wrap gap-2">
           <div className="relative flex-1 min-w-48">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9B9590' }} />
             <input
               type="text"
-              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:border-transparent transition"
-              style={{ '--tw-ring-color': 'rgba(139,26,47,0.2)' } as React.CSSProperties}
-              onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
-              onBlur={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.boxShadow = ''; }}
+              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-white shadow-sm focus:outline-none transition"
+              style={{
+                border: '1px solid #E8E4DE',
+                color: '#1A1714',
+              }}
               placeholder="Rechercher un lot…"
+              onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
+              onBlur={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.boxShadow = ''; }}
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
             />
           </div>
           <select
-            className="px-3 py-2 text-sm rounded-lg bg-white border border-gray-300 text-gray-700 shadow-sm focus:outline-none cursor-pointer"
+            className="px-3 py-2 text-sm rounded-lg bg-white shadow-sm focus:outline-none cursor-pointer"
+            style={{ border: '1px solid #E8E4DE', color: '#5C5550' }}
             value={filterType}
             onChange={handleFilterChange(setFilterType)}
           >
@@ -157,7 +166,8 @@ export default function Lots() {
             ))}
           </select>
           <select
-            className="px-3 py-2 text-sm rounded-lg bg-white border border-gray-300 text-gray-700 shadow-sm focus:outline-none cursor-pointer"
+            className="px-3 py-2 text-sm rounded-lg bg-white shadow-sm focus:outline-none cursor-pointer"
+            style={{ border: '1px solid #E8E4DE', color: '#5C5550' }}
             value={filterStatus}
             onChange={handleFilterChange(setFilterStatus)}
           >
@@ -169,38 +179,48 @@ export default function Lots() {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div
+          className="bg-white rounded-xl overflow-hidden"
+          style={{
+            border: '1px solid #E8E4DE',
+            boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)',
+          }}
+        >
           <div className="overflow-x-auto">
           <table className="w-full min-w-[640px]">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
+              <tr style={{ backgroundColor: '#F9F8F6', borderBottom: '1px solid #E8E4DE' }}>
                 {['Numéro', 'Nom', 'Type', 'Millésime', 'Volume', 'Statut', 'Contenants', ''].map((col, i) => (
                   <th
                     key={col || i}
-                    className={`px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide ${
+                    className={`px-4 py-3 text-xs font-semibold uppercase tracking-wide ${
                       col === 'Volume' ? 'text-right' : col === '' ? '' : 'text-left'
                     }`}
+                    style={{ color: '#9B9590' }}
                   >
                     {col}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody style={{ borderTop: 'none' }}>
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
-                  <tr key={i}>
+                  <tr key={i} style={{ borderBottom: '1px solid #E8E4DE' }}>
                     <td colSpan={8} className="px-4 py-3">
-                      <div className="h-4 bg-gray-100 rounded animate-pulse w-full" />
+                      <div
+                        className="h-4 rounded animate-pulse w-full"
+                        style={{ backgroundColor: '#F0EDE8' }}
+                      />
                     </td>
                   </tr>
                 ))
               ) : pagedLots.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-16">
-                    <Wine size={32} className="mx-auto mb-3 text-gray-300" />
-                    <p className="text-sm text-gray-500">Aucun lot trouvé</p>
-                    <p className="text-xs text-gray-400 mt-1">Essayez de modifier vos filtres</p>
+                    <Wine size={32} className="mx-auto mb-3" style={{ color: '#D6D0C8' }} />
+                    <p className="text-sm" style={{ color: '#9B9590' }}>Aucun lot trouvé</p>
+                    <p className="text-xs mt-1" style={{ color: '#C4BEB8' }}>Essayez de modifier vos filtres</p>
                   </td>
                 </tr>
               ) : (
@@ -213,16 +233,17 @@ export default function Lots() {
                   return (
                     <tr
                       key={lot.id}
-                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="hover:bg-[#F9F8F6] cursor-pointer transition-colors"
+                      style={{ borderBottom: '1px solid #F0EDE8' }}
                       onClick={() => navigate(`/lots/${lot.id}`)}
                     >
                       <td className="px-4 py-3">
-                        <span className="text-sm font-medium text-gray-900">{lot.lot_number}</span>
+                        <span className="text-sm font-medium" style={{ color: '#1A1714' }}>{lot.lot_number}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-700">{lot.name}</span>
+                        <span className="text-sm" style={{ color: '#5C5550' }}>{lot.name}</span>
                         {lot.appellation && (
-                          <p className="text-xs text-gray-400 mt-0.5">{lot.appellation}</p>
+                          <p className="text-xs mt-0.5" style={{ color: '#9B9590' }}>{lot.appellation}</p>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -238,19 +259,22 @@ export default function Lots() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-700">{lot.vintage_year || '—'}</span>
+                        <span className="text-sm" style={{ color: '#5C5550' }}>{lot.vintage_year || '—'}</span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium" style={{ color: '#1A1714' }}>
                           {Number(lot.current_volume_liters).toLocaleString('fr')} L
                         </p>
-                        <div className="w-16 ml-auto bg-gray-100 rounded-full h-1 mt-1.5">
+                        <div
+                          className="w-16 ml-auto rounded-full h-1 mt-1.5"
+                          style={{ backgroundColor: '#F0EDE8' }}
+                        >
                           <div
                             className="h-1 rounded-full transition-all"
                             style={{ width: `${volumePct}%`, backgroundColor: typeConf.color }}
                           />
                         </div>
-                        <p className="text-xs text-gray-400 mt-0.5">{Math.round(volumePct)}%</p>
+                        <p className="text-xs mt-0.5" style={{ color: '#9B9590' }}>{Math.round(volumePct)}%</p>
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -265,7 +289,7 @@ export default function Lots() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs" style={{ color: '#9B9590' }}>
                           {(lot.current_containers as any[]).length > 0
                             ? (lot.current_containers as any[]).map((c: any) => c.code).join(', ')
                             : '—'}
@@ -273,7 +297,16 @@ export default function Lots() {
                       </td>
                       <td className="px-4 py-3">
                         <button
-                          className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                          className="p-1.5 rounded-md transition-colors"
+                          style={{ color: '#9B9590' }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.color = '#5C5550';
+                            e.currentTarget.style.backgroundColor = '#F0EDE8';
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.color = '#9B9590';
+                            e.currentTarget.style.backgroundColor = '';
+                          }}
                           onClick={e => { e.stopPropagation(); navigate(`/lots/${lot.id}`); }}
                           title="Voir le lot"
                         >
@@ -290,15 +323,32 @@ export default function Lots() {
 
           {/* Pagination */}
           {!isLoading && filteredLots.length > PAGE_SIZE && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50">
-              <p className="text-xs text-gray-500">
+            <div
+              className="flex items-center justify-between px-4 py-3"
+              style={{
+                borderTop: '1px solid #E8E4DE',
+                backgroundColor: '#F9F8F6',
+              }}
+            >
+              <p className="text-xs" style={{ color: '#9B9590' }}>
                 {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredLots.length)} sur {filteredLots.length} lots
               </p>
               <div className="flex items-center gap-1">
                 <button
                   disabled={page === 1}
                   onClick={() => setPage(p => p - 1)}
-                  className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="p-1.5 rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  style={{ color: '#9B9590' }}
+                  onMouseEnter={e => {
+                    if (page !== 1) {
+                      e.currentTarget.style.color = '#1A1714';
+                      e.currentTarget.style.backgroundColor = '#E8E4DE';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = '#9B9590';
+                    e.currentTarget.style.backgroundColor = '';
+                  }}
                 >
                   <ChevronLeft size={14} />
                 </button>
@@ -306,12 +356,18 @@ export default function Lots() {
                   <button
                     key={i}
                     onClick={() => setPage(i + 1)}
-                    className={`w-7 h-7 rounded-md text-xs font-medium transition-colors ${
+                    className="w-7 h-7 rounded-md text-xs font-medium transition-colors"
+                    style={
                       page === i + 1
-                        ? 'text-white'
-                        : 'text-gray-600 hover:bg-gray-200'
-                    }`}
-                    style={page === i + 1 ? { backgroundColor: '#8B1A2F' } : {}}
+                        ? { backgroundColor: '#8B1A2F', color: '#ffffff' }
+                        : { color: '#5C5550' }
+                    }
+                    onMouseEnter={e => {
+                      if (page !== i + 1) e.currentTarget.style.backgroundColor = '#E8E4DE';
+                    }}
+                    onMouseLeave={e => {
+                      if (page !== i + 1) e.currentTarget.style.backgroundColor = '';
+                    }}
                   >
                     {i + 1}
                   </button>
@@ -319,7 +375,18 @@ export default function Lots() {
                 <button
                   disabled={page === totalPages}
                   onClick={() => setPage(p => p + 1)}
-                  className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="p-1.5 rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  style={{ color: '#9B9590' }}
+                  onMouseEnter={e => {
+                    if (page !== totalPages) {
+                      e.currentTarget.style.color = '#1A1714';
+                      e.currentTarget.style.backgroundColor = '#E8E4DE';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = '#9B9590';
+                    e.currentTarget.style.backgroundColor = '';
+                  }}
                 >
                   <ChevronRight size={14} />
                 </button>
@@ -373,25 +440,55 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    border: '1px solid #E8E4DE',
+    color: '#1A1714',
+    backgroundColor: '#ffffff',
+  };
+
   const inputClass =
-    'w-full px-3 py-2 text-sm rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none transition';
-  const labelClass = 'block text-xs font-medium text-gray-700 mb-1';
+    'w-full px-3 py-2 text-sm rounded-lg shadow-sm focus:outline-none transition';
+
+  const labelClass = 'block text-xs font-medium mb-1';
+
+  const focusInput = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    e.currentTarget.style.borderColor = '#8B1A2F';
+    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)';
+  };
+  const blurInput = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    e.currentTarget.style.borderColor = '#E8E4DE';
+    e.currentTarget.style.boxShadow = '';
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div
-        className="bg-white rounded-xl border border-gray-200 w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        style={{ boxShadow: '0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.06)' }}
+        className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        style={{
+          border: '1px solid #E8E4DE',
+          boxShadow: '0 10px 15px rgba(26,23,20,0.08), 0 4px 6px rgba(26,23,20,0.06)',
+        }}
       >
         {/* Modal header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div
+          className="flex items-center justify-between px-6 py-4"
+          style={{ borderBottom: '1px solid #E8E4DE' }}
+        >
           <div className="flex items-center gap-2">
             <Wine size={18} style={{ color: '#8B1A2F' }} />
-            <h2 className="text-base font-semibold text-gray-900">Nouveau lot</h2>
+            <h2
+              className="text-base font-semibold"
+              style={{ color: '#1A1714', fontFamily: "'Cabinet Grotesk', 'Satoshi', system-ui, sans-serif" }}
+            >
+              Nouveau lot
+            </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="p-1.5 rounded-md transition-colors"
+            style={{ color: '#9B9590' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#5C5550'; e.currentTarget.style.backgroundColor = '#F0EDE8'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#9B9590'; e.currentTarget.style.backgroundColor = ''; }}
           >
             <X size={16} />
           </button>
@@ -407,24 +504,30 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelClass}>N° de lot <span className="text-red-500">*</span></label>
+              <label className={labelClass} style={{ color: '#5C5550' }}>
+                N° de lot <span className="text-red-500">*</span>
+              </label>
               <input
                 className={inputClass}
+                style={inputStyle}
                 value={form.lot_number}
                 onChange={e => setForm({ ...form, lot_number: e.target.value })}
-                onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
-                onBlur={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.boxShadow = ''; }}
+                onFocus={focusInput}
+                onBlur={blurInput}
                 required
               />
             </div>
             <div>
-              <label className={labelClass}>Nom <span className="text-red-500">*</span></label>
+              <label className={labelClass} style={{ color: '#5C5550' }}>
+                Nom <span className="text-red-500">*</span>
+              </label>
               <input
                 className={inputClass}
+                style={inputStyle}
                 value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })}
-                onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
-                onBlur={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.boxShadow = ''; }}
+                onFocus={focusInput}
+                onBlur={blurInput}
                 placeholder="ex: Cuvée Prestige"
                 required
               />
@@ -433,13 +536,16 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelClass}>Type <span className="text-red-500">*</span></label>
+              <label className={labelClass} style={{ color: '#5C5550' }}>
+                Type <span className="text-red-500">*</span>
+              </label>
               <select
                 className={inputClass + ' cursor-pointer'}
+                style={inputStyle}
                 value={form.type}
                 onChange={e => setForm({ ...form, type: e.target.value })}
-                onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
-                onBlur={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.boxShadow = ''; }}
+                onFocus={focusInput}
+                onBlur={blurInput}
               >
                 {Object.entries(TYPE_CONFIG).map(([v, { label }]) => (
                   <option key={v} value={v}>{label}</option>
@@ -447,14 +553,15 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
               </select>
             </div>
             <div>
-              <label className={labelClass}>Millésime</label>
+              <label className={labelClass} style={{ color: '#5C5550' }}>Millésime</label>
               <input
                 type="number"
                 className={inputClass}
+                style={inputStyle}
                 value={form.vintage_year}
                 onChange={e => setForm({ ...form, vintage_year: Number(e.target.value) })}
-                onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
-                onBlur={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.boxShadow = ''; }}
+                onFocus={focusInput}
+                onBlur={blurInput}
                 min={1900}
                 max={2100}
               />
@@ -462,27 +569,31 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
           </div>
 
           <div>
-            <label className={labelClass}>Appellation</label>
+            <label className={labelClass} style={{ color: '#5C5550' }}>Appellation</label>
             <input
               className={inputClass}
+              style={inputStyle}
               value={form.appellation}
               onChange={e => setForm({ ...form, appellation: e.target.value })}
-              onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
-              onBlur={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.boxShadow = ''; }}
+              onFocus={focusInput}
+              onBlur={blurInput}
               placeholder="ex: Bordeaux AOC"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelClass}>Volume initial (L) <span className="text-red-500">*</span></label>
+              <label className={labelClass} style={{ color: '#5C5550' }}>
+                Volume initial (L) <span className="text-red-500">*</span>
+              </label>
               <input
                 type="number"
                 className={inputClass}
+                style={inputStyle}
                 value={form.initial_volume_liters}
                 onChange={e => setForm({ ...form, initial_volume_liters: e.target.value })}
-                onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
-                onBlur={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.boxShadow = ''; }}
+                onFocus={focusInput}
+                onBlur={blurInput}
                 min={0}
                 step={0.1}
                 placeholder="ex: 5000"
@@ -490,36 +601,44 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
               />
             </div>
             <div>
-              <label className={labelClass}>Date de vendange</label>
+              <label className={labelClass} style={{ color: '#5C5550' }}>Date de vendange</label>
               <input
                 type="date"
                 className={inputClass}
+                style={inputStyle}
                 value={form.harvest_date}
                 onChange={e => setForm({ ...form, harvest_date: e.target.value })}
-                onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
-                onBlur={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.boxShadow = ''; }}
+                onFocus={focusInput}
+                onBlur={blurInput}
               />
             </div>
           </div>
 
           <div>
-            <label className={labelClass}>Notes</label>
+            <label className={labelClass} style={{ color: '#5C5550' }}>Notes</label>
             <textarea
               className={inputClass + ' resize-none h-20'}
+              style={inputStyle}
               value={form.notes}
               onChange={e => setForm({ ...form, notes: e.target.value })}
-              onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
-              onBlur={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.boxShadow = ''; }}
+              onFocus={focusInput}
+              onBlur={blurInput}
               placeholder="Informations complémentaires…"
             />
           </div>
 
           {/* Footer actions */}
-          <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
+          <div
+            className="flex gap-3 justify-end pt-2"
+            style={{ borderTop: '1px solid #F0EDE8' }}
+          >
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm transition-colors"
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-white shadow-sm transition-colors"
+              style={{ color: '#5C5550', border: '1px solid #E8E4DE' }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F9F8F6'; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#ffffff'; }}
             >
               Annuler
             </button>

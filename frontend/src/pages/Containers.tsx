@@ -53,17 +53,25 @@ export default function Containers() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F5F3EF]">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <h1
+              className="text-2xl font-bold tracking-tight flex items-center gap-2"
+              style={{
+                color: '#1A1714',
+                fontFamily: "'Cabinet Grotesk', 'Satoshi', system-ui, sans-serif",
+              }}
+            >
               <Package size={22} className="text-[#8B1A2F]" />
               Contenants
             </h1>
-            <p className="text-sm text-gray-500 mt-1">{filtered.length} contenant{filtered.length !== 1 ? 's' : ''}</p>
+            <p className="text-sm mt-1" style={{ color: '#9B9590' }}>
+              {filtered.length} contenant{filtered.length !== 1 ? 's' : ''}
+            </p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
@@ -80,18 +88,27 @@ export default function Containers() {
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-44 max-w-xs">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9B9590' }} />
             <input
-              className="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors"
+              className="w-full pl-9 pr-3 py-2 bg-white rounded-lg text-sm shadow-sm focus:outline-none transition-colors"
+              style={{
+                border: '1px solid #E8E4DE',
+                color: '#5C5550',
+              }}
               placeholder="Rechercher un contenant..."
               value={search}
               onChange={e => setSearch(e.target.value)}
+              onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
+              onBlur={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.boxShadow = ''; }}
             />
           </div>
           <select
-            className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors"
+            className="bg-white rounded-lg px-3 py-2 text-sm shadow-sm focus:outline-none transition-colors"
+            style={{ border: '1px solid #E8E4DE', color: '#5C5550' }}
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value)}
+            onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
+            onBlur={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.boxShadow = ''; }}
           >
             <option value="">Tous les statuts</option>
             {Object.entries(STATUS_CONFIG).map(([v, { label }]) => (
@@ -99,9 +116,12 @@ export default function Containers() {
             ))}
           </select>
           <select
-            className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors"
+            className="bg-white rounded-lg px-3 py-2 text-sm shadow-sm focus:outline-none transition-colors"
+            style={{ border: '1px solid #E8E4DE', color: '#5C5550' }}
             value={filterType}
             onChange={e => setFilterType(e.target.value)}
+            onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
+            onBlur={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.boxShadow = ''; }}
           >
             <option value="">Tous les types</option>
             {Object.entries(CONTAINER_TYPES).map(([v, label]) => (
@@ -109,25 +129,34 @@ export default function Containers() {
             ))}
           </select>
 
-          <div className="ml-auto flex items-center gap-1 bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
+          <div
+            className="ml-auto flex items-center gap-1 bg-white rounded-lg p-1 shadow-sm"
+            style={{ border: '1px solid #E8E4DE' }}
+          >
             <button
               onClick={() => setViewMode('grid')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
+              style={
                 viewMode === 'grid'
-                  ? 'bg-[#8B1A2F] text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-              }`}
+                  ? { backgroundColor: '#8B1A2F', color: '#ffffff' }
+                  : { color: '#9B9590' }
+              }
+              onMouseEnter={e => { if (viewMode !== 'grid') e.currentTarget.style.color = '#5C5550'; }}
+              onMouseLeave={e => { if (viewMode !== 'grid') e.currentTarget.style.color = '#9B9590'; }}
             >
               <Grid3X3 size={14} />
               Grille
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
+              style={
                 viewMode === 'table'
-                  ? 'bg-[#8B1A2F] text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-              }`}
+                  ? { backgroundColor: '#8B1A2F', color: '#ffffff' }
+                  : { color: '#9B9590' }
+              }
+              onMouseEnter={e => { if (viewMode !== 'table') e.currentTarget.style.color = '#5C5550'; }}
+              onMouseLeave={e => { if (viewMode !== 'table') e.currentTarget.style.color = '#9B9590'; }}
             >
               <List size={14} />
               Tableau
@@ -140,18 +169,25 @@ export default function Containers() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {isLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm animate-pulse">
-                  <div className="h-20 bg-gray-100 rounded" />
+                <div
+                  key={i}
+                  className="bg-white rounded-xl p-5 shadow-sm animate-pulse"
+                  style={{ border: '1px solid #E8E4DE' }}
+                >
+                  <div className="h-20 rounded" style={{ backgroundColor: '#F0EDE8' }} />
                 </div>
               ))
             ) : filtered.length === 0 ? (
               <div className="col-span-3 text-center py-16">
-                <div className="flex flex-col items-center gap-3 text-gray-400">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3" style={{ color: '#9B9590' }}>
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: '#F0EDE8' }}
+                  >
                     <Package size={22} />
                   </div>
-                  <p className="text-sm font-medium text-gray-500">Aucun contenant trouvé</p>
-                  <p className="text-xs text-gray-400">Modifiez vos filtres ou ajoutez un contenant</p>
+                  <p className="text-sm font-medium" style={{ color: '#9B9590' }}>Aucun contenant trouvé</p>
+                  <p className="text-xs" style={{ color: '#C4BEB8' }}>Modifiez vos filtres ou ajoutez un contenant</p>
                 </div>
               </div>
             ) : (
@@ -163,7 +199,21 @@ export default function Containers() {
                 return (
                   <div
                     key={c.id}
-                    className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 cursor-pointer"
+                    className="bg-white rounded-xl p-5 cursor-pointer transition-all duration-200"
+                    style={{
+                      border: '1px solid #E8E4DE',
+                      boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)',
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLDivElement).style.borderColor = '#D4CEC6';
+                      (e.currentTarget as HTMLDivElement).style.boxShadow =
+                        '0 4px 8px rgba(26,23,20,0.10), 0 8px 20px rgba(26,23,20,0.08)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLDivElement).style.borderColor = '#E8E4DE';
+                      (e.currentTarget as HTMLDivElement).style.boxShadow =
+                        '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)';
+                    }}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
@@ -171,30 +221,36 @@ export default function Containers() {
                           <Package size={16} className="text-[#8B1A2F]" />
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-900 text-sm leading-tight">{c.code}</p>
-                          <p className="text-xs text-gray-500">{c.name}</p>
+                          <p className="font-semibold text-sm leading-tight" style={{ color: '#1A1714' }}>{c.code}</p>
+                          <p className="text-xs" style={{ color: '#9B9590' }}>{c.name}</p>
                         </div>
                       </div>
                       <StatusBadge status={c.status} />
                     </div>
 
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md font-medium">
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-md font-medium"
+                        style={{ backgroundColor: '#F0EDE8', color: '#5C5550' }}
+                      >
                         {CONTAINER_TYPES[c.type] || c.type}
                       </span>
                       {c.location && (
-                        <span className="text-xs text-gray-400">{c.location}</span>
+                        <span className="text-xs" style={{ color: '#9B9590' }}>{c.location}</span>
                       )}
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-xs text-gray-500 mb-1.5">
+                      <div className="flex justify-between text-xs mb-1.5" style={{ color: '#9B9590' }}>
                         <span>Remplissage</span>
-                        <span className="font-medium text-gray-700">
+                        <span className="font-medium" style={{ color: '#5C5550' }}>
                           {Number(c.current_volume_liters || 0).toLocaleString('fr')} / {Number(c.capacity_liters).toLocaleString('fr')} L
                         </span>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="w-full rounded-full h-1.5 overflow-hidden"
+                        style={{ backgroundColor: '#F0EDE8' }}
+                      >
                         <div
                           className="h-1.5 rounded-full transition-all duration-500"
                           style={{ width: `${fillPercent}%`, backgroundColor: fillColor }}
@@ -223,34 +279,43 @@ export default function Containers() {
 
         {/* Table View */}
         {viewMode === 'table' && (
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div
+            className="bg-white rounded-xl overflow-hidden"
+            style={{
+              border: '1px solid #E8E4DE',
+              boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)',
+            }}
+          >
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Contenant</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Emplacement</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Capacité</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Remplissage</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Lot(s)</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Statut</th>
+                <tr style={{ backgroundColor: '#F9F8F6', borderBottom: '1px solid #E8E4DE' }}>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>Contenant</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>Type</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>Emplacement</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>Capacité</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>Remplissage</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>Lot(s)</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>Statut</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {isLoading ? (
                   Array.from({ length: 6 }).map((_, i) => (
-                    <tr key={i}>
+                    <tr key={i} style={{ borderBottom: '1px solid #F0EDE8' }}>
                       <td colSpan={7} className="px-4 py-3">
-                        <div className="h-4 bg-gray-100 rounded animate-pulse w-full" />
+                        <div
+                          className="h-4 rounded animate-pulse w-full"
+                          style={{ backgroundColor: '#F0EDE8' }}
+                        />
                       </td>
                     </tr>
                   ))
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="text-center py-14">
-                      <div className="flex flex-col items-center gap-2 text-gray-400">
+                      <div className="flex flex-col items-center gap-2" style={{ color: '#9B9590' }}>
                         <Package size={28} />
-                        <p className="text-sm text-gray-500">Aucun contenant trouvé</p>
+                        <p className="text-sm" style={{ color: '#9B9590' }}>Aucun contenant trouvé</p>
                       </div>
                     </td>
                   </tr>
@@ -260,23 +325,30 @@ export default function Containers() {
                       ? Math.min(100, (c.current_volume_liters / c.capacity_liters) * 100)
                       : 0;
                     return (
-                      <tr key={c.id} className="hover:bg-gray-50 transition-colors duration-100">
+                      <tr
+                        key={c.id}
+                        className="hover:bg-[#F9F8F6] transition-colors duration-100"
+                        style={{ borderBottom: '1px solid #F0EDE8' }}
+                      >
                         <td className="px-4 py-3">
-                          <p className="text-sm font-semibold text-gray-900">{c.code}</p>
-                          <p className="text-xs text-gray-500">{c.name}</p>
+                          <p className="text-sm font-semibold" style={{ color: '#1A1714' }}>{c.code}</p>
+                          <p className="text-xs" style={{ color: '#9B9590' }}>{c.name}</p>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
+                        <td className="px-4 py-3 text-sm" style={{ color: '#5C5550' }}>
                           {CONTAINER_TYPES[c.type] || c.type}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          {c.location || <span className="text-gray-400">—</span>}
+                        <td className="px-4 py-3 text-sm" style={{ color: '#9B9590' }}>
+                          {c.location || <span style={{ color: '#C4BEB8' }}>—</span>}
                         </td>
-                        <td className="px-4 py-3 text-right text-sm font-medium text-gray-700">
+                        <td className="px-4 py-3 text-right text-sm font-medium" style={{ color: '#5C5550' }}>
                           {Number(c.capacity_liters).toLocaleString('fr')} L
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-gray-100 rounded-full h-1.5 overflow-hidden min-w-16">
+                            <div
+                              className="flex-1 rounded-full h-1.5 overflow-hidden min-w-16"
+                              style={{ backgroundColor: '#F0EDE8' }}
+                            >
                               <div
                                 className="h-1.5 rounded-full"
                                 style={{
@@ -285,7 +357,7 @@ export default function Containers() {
                                 }}
                               />
                             </div>
-                            <span className="text-xs text-gray-500 whitespace-nowrap">
+                            <span className="text-xs whitespace-nowrap" style={{ color: '#9B9590' }}>
                               {Math.round(fillPercent)}%
                             </span>
                           </div>
@@ -302,11 +374,11 @@ export default function Containers() {
                                 </span>
                               ))}
                               {c.current_lots.length > 2 && (
-                                <span className="text-xs text-gray-400">+{c.current_lots.length - 2}</span>
+                                <span className="text-xs" style={{ color: '#9B9590' }}>+{c.current_lots.length - 2}</span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-sm text-gray-400">—</span>
+                            <span className="text-sm" style={{ color: '#C4BEB8' }}>—</span>
                           )}
                         </td>
                         <td className="px-4 py-3">
@@ -355,17 +427,49 @@ function CreateContainerModal({ onClose, onCreated }: { onClose: () => void; onC
     }
   };
 
-  const inputClass = "w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors";
-  const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+  const inputBaseStyle: React.CSSProperties = {
+    border: '1px solid #E8E4DE',
+    color: '#1A1714',
+    backgroundColor: '#ffffff',
+  };
+
+  const inputClass = "w-full bg-white rounded-lg px-3 py-2 text-sm shadow-sm focus:outline-none transition-colors";
+  const labelClass = "block text-sm font-medium mb-1";
+
+  const focusInput = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+    e.currentTarget.style.borderColor = '#8B1A2F';
+    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)';
+  };
+  const blurInput = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+    e.currentTarget.style.borderColor = '#E8E4DE';
+    e.currentTarget.style.boxShadow = '';
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Nouveau contenant</h2>
+      <div
+        className="bg-white rounded-xl shadow-xl w-full max-w-md"
+        style={{ border: '1px solid #E8E4DE' }}
+      >
+        <div
+          className="flex items-center justify-between px-6 py-4"
+          style={{ borderBottom: '1px solid #E8E4DE' }}
+        >
+          <h2
+            className="text-lg font-semibold"
+            style={{
+              color: '#1A1714',
+              fontFamily: "'Cabinet Grotesk', 'Satoshi', system-ui, sans-serif",
+            }}
+          >
+            Nouveau contenant
+          </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="p-1.5 rounded-lg transition-colors"
+            style={{ color: '#9B9590' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#5C5550'; e.currentTarget.style.backgroundColor = '#F0EDE8'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#9B9590'; e.currentTarget.style.backgroundColor = ''; }}
           >
             <X size={16} />
           </button>
@@ -380,21 +484,27 @@ function CreateContainerModal({ onClose, onCreated }: { onClose: () => void; onC
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelClass}>Code *</label>
+                <label className={labelClass} style={{ color: '#5C5550' }}>Code *</label>
                 <input
                   className={inputClass}
+                  style={inputBaseStyle}
                   value={form.code}
                   onChange={e => setForm({ ...form, code: e.target.value })}
+                  onFocus={focusInput}
+                  onBlur={blurInput}
                   placeholder="CUV-01"
                   required
                 />
               </div>
               <div>
-                <label className={labelClass}>Nom *</label>
+                <label className={labelClass} style={{ color: '#5C5550' }}>Nom *</label>
                 <input
                   className={inputClass}
+                  style={inputBaseStyle}
                   value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })}
+                  onFocus={focusInput}
+                  onBlur={blurInput}
                   placeholder="Cuve principale"
                   required
                 />
@@ -403,11 +513,14 @@ function CreateContainerModal({ onClose, onCreated }: { onClose: () => void; onC
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelClass}>Type</label>
+                <label className={labelClass} style={{ color: '#5C5550' }}>Type</label>
                 <select
                   className={inputClass}
+                  style={inputBaseStyle}
                   value={form.type}
                   onChange={e => setForm({ ...form, type: e.target.value })}
+                  onFocus={focusInput}
+                  onBlur={blurInput}
                 >
                   {Object.entries(CONTAINER_TYPES).map(([v, l]) => (
                     <option key={v} value={v}>{l}</option>
@@ -415,12 +528,15 @@ function CreateContainerModal({ onClose, onCreated }: { onClose: () => void; onC
                 </select>
               </div>
               <div>
-                <label className={labelClass}>Capacité (L) *</label>
+                <label className={labelClass} style={{ color: '#5C5550' }}>Capacité (L) *</label>
                 <input
                   type="number"
                   className={inputClass}
+                  style={inputBaseStyle}
                   value={form.capacity_liters}
                   onChange={e => setForm({ ...form, capacity_liters: e.target.value })}
+                  onFocus={focusInput}
+                  onBlur={blurInput}
                   min={0}
                   placeholder="5000"
                   required
@@ -429,11 +545,14 @@ function CreateContainerModal({ onClose, onCreated }: { onClose: () => void; onC
             </div>
 
             <div>
-              <label className={labelClass}>Emplacement</label>
+              <label className={labelClass} style={{ color: '#5C5550' }}>Emplacement</label>
               <input
                 className={inputClass}
+                style={inputBaseStyle}
                 value={form.location}
                 onChange={e => setForm({ ...form, location: e.target.value })}
+                onFocus={focusInput}
+                onBlur={blurInput}
                 placeholder="Cave A, Rang 3..."
               />
             </div>
@@ -442,7 +561,10 @@ function CreateContainerModal({ onClose, onCreated }: { onClose: () => void; onC
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm transition-all duration-200"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-white shadow-sm transition-all duration-200"
+                style={{ color: '#5C5550', border: '1px solid #E8E4DE' }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F9F8F6'; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#ffffff'; }}
               >
                 Annuler
               </button>

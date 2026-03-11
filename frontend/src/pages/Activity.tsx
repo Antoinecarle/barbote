@@ -88,24 +88,27 @@ export default function ActivityPage() {
   const dayKeys = Object.keys(grouped);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F5F3EF]">
       <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
 
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <h1
+              className="text-2xl font-bold text-[#1A1714] tracking-tight flex items-center gap-2"
+              style={{ fontFamily: "'Cabinet Grotesk', 'Satoshi', sans-serif" }}
+            >
               <Activity size={22} className="text-[#8B1A2F]" />
               Activité
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-[#5C5550] mt-1">
               Historique des actions cave · {filtered.length} événement{filtered.length !== 1 ? 's' : ''}
             </p>
           </div>
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm transition-all duration-200 disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[#5C5550] bg-white border border-[#E8E4DE] hover:bg-[#F9F8F6] shadow-sm transition-all duration-200 disabled:opacity-50"
           >
             <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
             Actualiser
@@ -113,7 +116,7 @@ export default function ActivityPage() {
         </div>
 
         {/* Filter tabs */}
-        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg p-1 shadow-sm w-fit">
+        <div className="flex items-center gap-1 bg-white border border-[#E8E4DE] rounded-lg p-1 shadow-sm w-fit">
           {([
             { key: 'all', label: 'Tout', count: allEvents.length },
             { key: 'movement', label: 'Mouvements', count: allEvents.filter(e => e.event_type === 'movement').length },
@@ -125,14 +128,14 @@ export default function ActivityPage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
                 filterType === tab.key
                   ? 'bg-[#8B1A2F] text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  : 'text-[#5C5550] hover:text-[#1A1714] hover:bg-[#F0EDE8]'
               }`}
             >
               {tab.label}
               <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
                 filterType === tab.key
                   ? 'bg-white/20 text-white'
-                  : 'bg-gray-100 text-gray-500'
+                  : 'bg-[#F0EDE8] text-[#5C5550]'
               }`}>
                 {tab.count}
               </span>
@@ -141,28 +144,28 @@ export default function ActivityPage() {
         </div>
 
         {/* Activity feed */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-[#E8E4DE] rounded-xl shadow-sm overflow-hidden">
           {isLoading ? (
             <div className="p-6 space-y-5">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="flex items-start gap-4 animate-pulse">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 shrink-0" />
+                  <div className="w-8 h-8 rounded-full bg-[#F0EDE8] shrink-0" />
                   <div className="flex-1 space-y-2 pt-1">
-                    <div className="h-4 bg-gray-100 rounded w-1/2" />
-                    <div className="h-3 bg-gray-100 rounded w-1/3" />
+                    <div className="h-4 bg-[#F0EDE8] rounded w-1/2" />
+                    <div className="h-3 bg-[#F0EDE8] rounded w-1/3" />
                   </div>
-                  <div className="h-3 w-16 bg-gray-100 rounded" />
+                  <div className="h-3 w-16 bg-[#F0EDE8] rounded" />
                 </div>
               ))}
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
-              <div className="flex flex-col items-center gap-3 text-gray-400">
-                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3 text-[#9B9590]">
+                <div className="w-12 h-12 rounded-full bg-[#F0EDE8] flex items-center justify-center">
                   <Activity size={22} />
                 </div>
-                <p className="text-sm font-medium text-gray-500">Aucune activité récente</p>
-                <p className="text-xs text-gray-400">Les mouvements et opérations apparaîtront ici</p>
+                <p className="text-sm font-medium text-[#5C5550]">Aucune activité récente</p>
+                <p className="text-xs text-[#9B9590]">Les mouvements et opérations apparaîtront ici</p>
               </div>
             </div>
           ) : (
@@ -170,30 +173,30 @@ export default function ActivityPage() {
               {dayKeys.map((day, dayIndex) => (
                 <div key={day}>
                   {/* Day separator */}
-                  <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-b border-gray-100">
-                    <div className="h-px flex-1 bg-gray-200" />
-                    <span className="text-xs font-semibold text-gray-500 capitalize whitespace-nowrap">
+                  <div className="flex items-center gap-3 px-6 py-3 bg-[#F9F8F6] border-b border-[#E8E4DE]">
+                    <div className="h-px flex-1 bg-[#E8E4DE]" />
+                    <span className="text-xs font-semibold text-[#5C5550] capitalize whitespace-nowrap">
                       {day}
                     </span>
-                    <div className="h-px flex-1 bg-gray-200" />
+                    <div className="h-px flex-1 bg-[#E8E4DE]" />
                   </div>
 
                   {/* Events for that day */}
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-[#E8E4DE]">
                     {grouped[day].map((event, i) => {
                       const typeConf = EVENT_TYPE_CONFIG[event.event_type] || EVENT_TYPE_CONFIG.movement;
                       const initials = getInitials(event.actor);
                       return (
                         <div
                           key={i}
-                          className="flex items-start gap-4 px-6 py-4 hover:bg-gray-50 transition-colors duration-100"
+                          className="flex items-start gap-4 px-6 py-4 hover:bg-[#F9F8F6] transition-colors duration-100"
                         >
                           {/* Avatar */}
                           <div
                             className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
                             style={{
-                              backgroundColor: event.actor === 'Système' ? '#F3F4F6' : '#FDF2F4',
-                              color: event.actor === 'Système' ? '#6B7280' : '#8B1A2F',
+                              backgroundColor: event.actor === 'Système' ? '#F0EDE8' : '#FDF2F4',
+                              color: event.actor === 'Système' ? '#5C5550' : '#8B1A2F',
                             }}
                             title={event.actor}
                           >
@@ -210,22 +213,22 @@ export default function ActivityPage() {
                                 {typeConf.icon}
                                 {event.event_type === 'movement' ? 'Mouvement' : 'Opération'}
                               </span>
-                              <span className="text-sm font-semibold text-gray-900 capitalize">
+                              <span className="text-sm font-semibold text-[#1A1714] capitalize">
                                 {event.title}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-500 mt-0.5 truncate">{event.subtitle}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              Par <span className="font-medium text-gray-600">{event.actor}</span>
+                            <p className="text-xs text-[#5C5550] mt-0.5 truncate">{event.subtitle}</p>
+                            <p className="text-xs text-[#9B9590] mt-0.5">
+                              Par <span className="font-medium text-[#5C5550]">{event.actor}</span>
                             </p>
                           </div>
 
                           {/* Time */}
                           <div className="text-right shrink-0">
-                            <p className="text-xs text-gray-400 whitespace-nowrap">
+                            <p className="text-xs text-[#9B9590] whitespace-nowrap">
                               {formatRelativeDate(event.date)}
                             </p>
-                            <p className="text-xs text-gray-300 mt-0.5">
+                            <p className="text-xs text-[#9B9590] mt-0.5" style={{ opacity: 0.7 }}>
                               {new Date(event.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>
@@ -237,8 +240,8 @@ export default function ActivityPage() {
               ))}
 
               {/* Footer */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 text-center">
-                <p className="text-xs text-gray-400">
+              <div className="px-6 py-4 bg-[#F9F8F6] border-t border-[#E8E4DE] text-center">
+                <p className="text-xs text-[#9B9590]">
                   Affichage des {filtered.length} dernière{filtered.length !== 1 ? 's' : ''} activité{filtered.length !== 1 ? 's' : ''} · Actualisation automatique toutes les 15 sec
                 </p>
               </div>
