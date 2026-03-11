@@ -2,7 +2,6 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import morgan from 'morgan';
 import { createServer } from 'http';
 import { Server as SocketIO } from 'socket.io';
 import path from 'path';
@@ -23,6 +22,9 @@ import monitoringRouter from './routes/monitoring.js';
 import importsRouter from './routes/imports.js';
 import { monitoring } from './services/monitoring.js';
 import { query } from './db/index.js';
+import { requestLogger, log } from './middleware/logger.js';
+import { globalErrorHandler, notFound } from './middleware/error-handler.js';
+import { globalLimiter, authLimiter } from './middleware/rate-limit.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.BARBOTE_PORT || 3006;
@@ -40,9 +42,11 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 app.use(cors({ origin: '*' }));
-app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Structured request logging (replaces morgan)
+app.use(requestLogger());
 
 // Serve static files — support both Railway (server/dist) and local (frontend/dist)
 const distPath = path.join(__dirname, '../frontend/dist');
@@ -53,8 +57,11 @@ app.use(express.static(actualDistPath));
 // Monitoring middleware
 app.use(monitoring.middleware());
 
+// Global rate limiter
+app.use('/api/', globalLimiter);
+
 // API Routes
-app.use('/api/auth', authRouter);
+app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/containers', containersRouter);
 app.use('/api/monitoring', monitoringRouter);
 app.use('/api/lots', lotsRouter);
@@ -66,13 +73,18 @@ app.use('/api/maintenance', maintenanceRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/imports', importsRouter);
 
-// Health check
+// Health check — detailed version using monitoring service
 app.get('/api/health', async (req, res) => {
   try {
-    await query('SELECT 1');
-    res.json({ status: 'ok', timestamp: new Date().toISOString(), service: 'barbote-api' });
+    const health = await monitoring.getHealth();
+    const statusCode = health.status === 'healthy' ? 200 : 503;
+    res.status(statusCode).json({
+      ...health,
+      version: process.env.npm_package_version || '1.0.0',
+      node_version: process.version,
+    });
   } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
+    res.status(503).json({ status: 'error', message: err.message });
   }
 });
 
@@ -105,6 +117,9 @@ io.on('connection', (socket) => {
 // Export io for use in routes
 app.set('io', io);
 
+// 404 for unmatched API routes
+app.use('/api/', notFound);
+
 // SPA fallback
 app.get('*', (req, res) => {
   const indexPath = path.join(actualDistPath, 'index.html');
@@ -113,8 +128,12 @@ app.get('*', (req, res) => {
   });
 });
 
+// Global error handler — must be last
+app.use(globalErrorHandler);
+
 // Start server
 httpServer.listen(PORT, '0.0.0.0', async () => {
+  log('info', { event: 'server_start', port: PORT, env: process.env.NODE_ENV || 'development' });
   console.log(`\n🍷 Barbote API running on port ${PORT}`);
   console.log(`   Network: http://alfredhub.io:${PORT}`);
   console.log(`   Health: http://alfredhub.io:${PORT}/api/health\n`);
@@ -124,8 +143,10 @@ httpServer.listen(PORT, '0.0.0.0', async () => {
     const { readFileSync } = await import('fs');
     const schema = readFileSync(path.join(__dirname, 'db/schema.sql'), 'utf8');
     await query(schema);
+    log('info', { event: 'db_schema_ensured' });
     console.log('✅ Database schema ensured');
   } catch (err) {
+    log('warn', { event: 'db_schema_warning', message: err.message });
     console.error('Migration warning:', err.message);
   }
 });
