@@ -4,6 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Legacy dark-mode palette (kept for compatibility)
         wine: {
           50: '#fdf2f8',
           100: '#fce7f3',
@@ -34,7 +35,12 @@ export default {
           400: '#FBBF24',
           500: '#F59E0B',
           600: '#D97706',
-        }
+        },
+        // Light-mode design system tokens
+        'wine-red': '#8B1A2F',
+        'wine-light': '#FDF2F4',
+        'wine-border': '#F3C5CE',
+        'wine-hover': '#F5E8EB',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -48,6 +54,11 @@ export default {
       keyframes: {
         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
         slideIn: { '0%': { transform: 'translateX(-10px)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
+      },
+      boxShadow: {
+        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.06)',
+        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06)',
+        'modal': '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.06)',
       },
     },
   },

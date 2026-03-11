@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { isAuthenticated } from './lib/auth';
 import VideoLoader from './components/VideoLoader';
 import Layout from './components/Layout';
@@ -24,32 +24,46 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const navigate = useNavigate();
   const [showVideo, setShowVideo] = useState(false);
-  const [videoCompleted, setVideoCompleted] = useState(false);
+  const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
-    // Show intro video only once per session
+    // If already authenticated and intro not seen yet, show video
     const hasSeenIntro = sessionStorage.getItem('barbote_intro_seen');
     if (!hasSeenIntro && isAuthenticated()) {
       setShowVideo(true);
     } else {
-      setVideoCompleted(true);
+      setAppReady(true);
     }
   }, []);
 
   const handleVideoComplete = () => {
     sessionStorage.setItem('barbote_intro_seen', '1');
     setShowVideo(false);
-    setVideoCompleted(true);
+    setAppReady(true);
+    navigate('/');
+  };
+
+  // Called by Login after successful authentication
+  const handleLoginSuccess = () => {
+    const hasSeenIntro = sessionStorage.getItem('barbote_intro_seen');
+    if (!hasSeenIntro) {
+      setShowVideo(true);
+      setAppReady(false);
+    } else {
+      setAppReady(true);
+      navigate('/');
+    }
   };
 
   return (
     <>
       {showVideo && <VideoLoader onComplete={handleVideoComplete} />}
 
-      {videoCompleted && (
+      {appReady && (
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/lots" element={<ProtectedRoute><Lots /></ProtectedRoute>} />
           <Route path="/lots/:id" element={<ProtectedRoute><LotDetail /></ProtectedRoute>} />

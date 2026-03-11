@@ -28,12 +28,12 @@ interface DashboardStats {
 }
 
 const WINE_COLORS = {
-  rouge: '#be185d',
-  blanc: '#d4a017',
-  rose: '#f9a8d4',
-  petillant: '#93c5fd',
-  mousseux: '#a78bfa',
-  autre: '#6b7280'
+  rouge: '#8B1A2F',
+  blanc: '#D97706',
+  rose: '#DB2777',
+  petillant: '#1D4ED8',
+  mousseux: '#7C3AED',
+  autre: '#6B7280'
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -46,6 +46,73 @@ const TYPE_LABELS: Record<string, string> = {
   autre: 'Autre'
 };
 
+const MOVEMENT_LABELS: Record<string, string> = {
+  entree: 'Entrée',
+  sortie: 'Sortie',
+  transfert: 'Transfert',
+  assemblage: 'Assemblage',
+  soutirage: 'Soutirage',
+  filtration: 'Filtration',
+  collage: 'Collage',
+  perte: 'Perte',
+  bottling: 'Mise en bouteille'
+};
+
+interface KpiCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  sub: string;
+  iconBg: string;
+  iconColor: string;
+}
+
+function KpiCard({ icon: Icon, label, value, sub, iconBg, iconColor }: KpiCardProps) {
+  return (
+    <div
+      className="bg-white border border-gray-200 rounded-xl p-6"
+      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)' }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div
+          className="w-10 h-10 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: iconBg }}
+        >
+          <Icon size={20} style={{ color: iconColor }} />
+        </div>
+      </div>
+      <div>
+        <p className="text-3xl font-bold text-gray-900 tracking-tight">{value}</p>
+        <p className="text-sm font-medium text-gray-700 mt-1">{label}</p>
+        <p className="text-xs text-gray-500 mt-0.5">{sub}</p>
+      </div>
+    </div>
+  );
+}
+
+function SectionCard({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
+  return (
+    <div
+      className="bg-white border border-gray-200 rounded-xl p-6"
+      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)' }}
+    >
+      <h2 className="text-sm font-semibold text-gray-900 mb-5 flex items-center gap-2">
+        <Icon size={16} style={{ color: '#8B1A2F' }} />
+        {title}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
+      {message}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { data: stats } = useQuery({
     queryKey: ['dashboard-stats'],
@@ -55,54 +122,58 @@ export default function Dashboard() {
 
   const { data: lotsByType = [] } = useQuery({
     queryKey: ['lots-by-type'],
-    queryFn: () => api<Array<{type: string; count: string; total_volume: string}>>('/dashboard/lots-by-type'),
+    queryFn: () => api<Array<{ type: string; count: string; total_volume: string }>>('/dashboard/lots-by-type'),
   });
 
   const { data: recentActivity } = useQuery({
     queryKey: ['recent-activity'],
-    queryFn: () => api<{movements: any[]; operations: any[]}>('/dashboard/recent-activity'),
+    queryFn: () => api<{ movements: any[]; operations: any[] }>('/dashboard/recent-activity'),
   });
 
   const { data: volumeChart = [] } = useQuery({
     queryKey: ['volume-chart'],
-    queryFn: () => api<Array<{day: string; volume_in: string; volume_out: string}>>('/dashboard/volume-chart'),
+    queryFn: () => api<Array<{ day: string; volume_in: string; volume_out: string }>>('/dashboard/volume-chart'),
   });
 
-  const statCards = [
+  const kpiCards: KpiCardProps[] = [
     {
       icon: Wine,
       label: 'Lots actifs',
-      value: stats?.lots.active_lots || '0',
-      sub: `${Math.round(Number(stats?.lots.total_volume || 0)).toLocaleString('fr')} L total`,
-      color: 'text-bordeaux-400'
+      value: stats?.lots.active_lots ?? '0',
+      sub: `${Math.round(Number(stats?.lots.total_volume ?? 0)).toLocaleString('fr')} L total`,
+      iconBg: '#FDF2F4',
+      iconColor: '#8B1A2F'
     },
     {
       icon: Package,
       label: 'Contenants',
-      value: stats?.containers.in_use || '0',
-      sub: `${stats?.containers.available || '0'} disponibles`,
-      color: 'text-gold-400'
+      value: stats?.containers.in_use ?? '0',
+      sub: `${stats?.containers.available ?? '0'} disponibles`,
+      iconBg: '#FFFBEB',
+      iconColor: '#D97706'
     },
     {
       icon: ArrowLeftRight,
-      label: 'Mouvements (30j)',
-      value: stats?.movements_30d.count || '0',
-      sub: `${Math.round(Number(stats?.movements_30d.total_volume || 0)).toLocaleString('fr')} L`,
-      color: 'text-blue-400'
+      label: 'Mouvements 30j',
+      value: stats?.movements_30d.count ?? '0',
+      sub: `${Math.round(Number(stats?.movements_30d.total_volume ?? 0)).toLocaleString('fr')} L`,
+      iconBg: '#EFF6FF',
+      iconColor: '#1D4ED8'
     },
     {
       icon: Activity,
       label: 'Opérations actives',
-      value: stats?.operations.in_progress || '0',
-      sub: `${stats?.operations.planned || '0'} planifiées`,
-      color: 'text-green-400'
+      value: stats?.operations.in_progress ?? '0',
+      sub: `${stats?.operations.planned ?? '0'} planifiées`,
+      iconBg: '#F0FDF4',
+      iconColor: '#16A34A'
     }
   ];
 
   const pieData = lotsByType.map(item => ({
     name: TYPE_LABELS[item.type] || item.type,
     value: Math.round(Number(item.total_volume)),
-    color: WINE_COLORS[item.type as keyof typeof WINE_COLORS] || '#6b7280'
+    color: WINE_COLORS[item.type as keyof typeof WINE_COLORS] || '#6B7280'
   }));
 
   const chartData = volumeChart.map(d => ({
@@ -111,171 +182,205 @@ export default function Dashboard() {
     'Sortie': Math.round(Number(d.volume_out))
   }));
 
-  const MOVEMENT_LABELS: Record<string, string> = {
-    entree: 'Entrée', sortie: 'Sortie', transfert: 'Transfert',
-    assemblage: 'Assemblage', soutirage: 'Soutirage', filtration: 'Filtration',
-    collage: 'Collage', perte: 'Perte', bottling: 'Mise en bouteille'
-  };
-
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
+    <div className="space-y-6">
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#f5e6ea]">Tableau de bord</h1>
-        <p className="text-[#c4a0aa] text-sm mt-1">Vue d'ensemble de la cuverie</p>
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Tableau de bord</h1>
+        <p className="text-sm text-gray-500 mt-1">Vue d'ensemble de votre cave</p>
       </div>
 
-      {/* Stats */}
+      {/* KPI cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        {statCards.map(({ icon: Icon, label, value, sub, color }) => (
-          <div key={label} className="stat-card">
-            <div className="flex items-center justify-between">
-              <Icon className={color} size={20} />
-              <span className="text-2xl font-bold text-[#f5e6ea]">{value}</span>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-[#f5e6ea]">{label}</p>
-              <p className="text-xs text-[#c4a0aa] mt-0.5">{sub}</p>
-            </div>
-          </div>
+        {kpiCards.map(card => (
+          <KpiCard key={card.label} {...card} />
         ))}
       </div>
 
-      {/* Charts */}
+      {/* Charts row */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Volume chart */}
-        <div className="card xl:col-span-2">
-          <h2 className="text-sm font-semibold text-[#f5e6ea] mb-4 flex items-center gap-2">
-            <TrendingUp size={16} className="text-bordeaux-400" />
-            Volumes 30 derniers jours (L)
-          </h2>
+        {/* Bar chart – volume movements */}
+        <SectionCard title="Volume des mouvements (30j)" icon={TrendingUp}>
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={chartData} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
-                <XAxis dataKey="day" tick={{ fill: '#c4a0aa', fontSize: 10 }} />
-                <YAxis tick={{ fill: '#c4a0aa', fontSize: 10 }} />
-                <Tooltip
-                  contentStyle={{ background: '#1a0f11', border: '1px solid #3d1f2a', borderRadius: 8 }}
-                  labelStyle={{ color: '#f5e6ea' }}
+              <BarChart data={chartData} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
+                <XAxis
+                  dataKey="day"
+                  tick={{ fill: '#6B7280', fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
                 />
-                <Bar dataKey="Entrée" fill="#be185d" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="Sortie" fill="#d4a017" radius={[3, 3, 0, 0]} />
+                <YAxis
+                  tick={{ fill: '#6B7280', fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: '#FFFFFF',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    color: '#111827'
+                  }}
+                  labelStyle={{ color: '#374151', fontWeight: 600 }}
+                />
+                <Bar dataKey="Entrée" fill="#8B1A2F" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Sortie" fill="#D97706" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-48 flex items-center justify-center text-[#c4a0aa] text-sm">
-              Aucune donnée disponible
-            </div>
+            <EmptyState message="Aucune donnée disponible" />
           )}
-        </div>
+        </SectionCard>
 
-        {/* Lots by type */}
-        <div className="card">
-          <h2 className="text-sm font-semibold text-[#f5e6ea] mb-4 flex items-center gap-2">
-            <Wine size={16} className="text-bordeaux-400" />
-            Répartition par type
-          </h2>
+        {/* Pie chart – lots by type */}
+        <SectionCard title="Répartition par type" icon={Wine}>
           {pieData.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={160}>
                 <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70}
-                    dataKey="value" nameKey="name">
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={70}
+                    dataKey="value"
+                    nameKey="name"
+                    strokeWidth={2}
+                    stroke="#FFFFFF"
+                  >
                     {pieData.map((entry, i) => (
                       <Cell key={i} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ background: '#1a0f11', border: '1px solid #3d1f2a', borderRadius: 8 }}
+                    contentStyle={{
+                      background: '#FFFFFF',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      color: '#111827'
+                    }}
                     formatter={(v: number) => [`${v.toLocaleString('fr')} L`]}
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="space-y-1.5 mt-2">
+              <div className="space-y-2 mt-3">
                 {pieData.map(item => (
                   <div key={item.name} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: item.color }} />
-                      <span className="text-[#c4a0aa]">{item.name}</span>
+                      <div
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-gray-600">{item.name}</span>
                     </div>
-                    <span className="text-[#f5e6ea] font-medium">{item.value.toLocaleString('fr')} L</span>
+                    <span className="text-gray-900 font-medium">{item.value.toLocaleString('fr')} L</span>
                   </div>
                 ))}
               </div>
             </>
           ) : (
-            <div className="h-48 flex items-center justify-center text-[#c4a0aa] text-sm">
-              Aucun lot actif
-            </div>
+            <EmptyState message="Aucun lot actif" />
           )}
-        </div>
+        </SectionCard>
       </div>
 
-      {/* Recent activity */}
+      {/* Recent activity row */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <div className="card">
-          <h2 className="text-sm font-semibold text-[#f5e6ea] mb-4 flex items-center gap-2">
-            <ArrowLeftRight size={16} className="text-bordeaux-400" />
-            Derniers mouvements
-          </h2>
-          {recentActivity?.movements.length === 0 && (
-            <p className="text-[#c4a0aa] text-sm text-center py-4">Aucun mouvement</p>
-          )}
-          <div className="space-y-2">
-            {recentActivity?.movements.slice(0, 6).map((m: any, i: number) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b border-[#2a1520] last:border-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-bordeaux-500" />
-                  <div>
-                    <p className="text-xs font-medium text-[#f5e6ea]">
-                      {MOVEMENT_LABELS[m.movement_type] || m.movement_type}
-                      {m.lot_number && ` · ${m.lot_number}`}
+        {/* Recent movements */}
+        <SectionCard title="Mouvements récents" icon={ArrowLeftRight}>
+          {(!recentActivity?.movements || recentActivity.movements.length === 0) ? (
+            <p className="text-gray-400 text-sm text-center py-6">Aucun mouvement récent</p>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {recentActivity.movements.slice(0, 6).map((m: any, i: number) => (
+                <div key={i} className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: '#8B1A2F' }}
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {MOVEMENT_LABELS[m.movement_type] || m.movement_type}
+                        {m.lot_number && (
+                          <span className="text-gray-400 font-normal"> · {m.lot_number}</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500">{m.operator_name || 'Système'}</p>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0 ml-4">
+                    <p className="text-sm font-medium text-gray-900">
+                      {Number(m.volume_liters).toLocaleString('fr')} L
                     </p>
-                    <p className="text-xs text-[#c4a0aa]">{m.operator_name || 'Système'}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(m.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs font-medium text-[#f5e6ea]">{Number(m.volume_liters).toLocaleString('fr')} L</p>
-                  <p className="text-xs text-[#c4a0aa]">
-                    {new Date(m.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
 
-        <div className="card">
-          <h2 className="text-sm font-semibold text-[#f5e6ea] mb-4 flex items-center gap-2">
-            <Activity size={16} className="text-bordeaux-400" />
-            Opérations récentes
-          </h2>
-          {recentActivity?.operations.length === 0 && (
-            <p className="text-[#c4a0aa] text-sm text-center py-4">Aucune opération</p>
-          )}
-          <div className="space-y-2">
-            {recentActivity?.operations.slice(0, 6).map((o: any, i: number) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b border-[#2a1520] last:border-0">
-                <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full ${o.status === 'done' ? 'bg-green-500' : o.status === 'in_progress' ? 'bg-yellow-500' : 'bg-blue-500'}`} />
-                  <div>
-                    <p className="text-xs font-medium text-[#f5e6ea] capitalize">
-                      {o.operation_type.replace(/_/g, ' ')}
-                      {o.lot_number && ` · ${o.lot_number}`}
-                    </p>
-                    <p className="text-xs text-[#c4a0aa] line-clamp-1">{o.purpose}</p>
+        {/* Recent operations */}
+        <SectionCard title="Opérations récentes" icon={Activity}>
+          {(!recentActivity?.operations || recentActivity.operations.length === 0) ? (
+            <p className="text-gray-400 text-sm text-center py-6">Aucune opération récente</p>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {recentActivity.operations.slice(0, 6).map((o: any, i: number) => {
+                const statusConfig = o.status === 'done'
+                  ? { bg: '#F0FDF4', text: '#15803D', border: '#BBF7D0', label: 'Terminé' }
+                  : o.status === 'in_progress'
+                  ? { bg: '#FFFBEB', text: '#B45309', border: '#FDE68A', label: 'En cours' }
+                  : { bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE', label: 'Planifié' };
+
+                const dotColor = o.status === 'done'
+                  ? '#16A34A'
+                  : o.status === 'in_progress'
+                  ? '#D97706'
+                  : '#1D4ED8';
+
+                return (
+                  <div key={i} className="flex items-center justify-between py-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: dotColor }}
+                      />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 capitalize truncate">
+                          {o.operation_type.replace(/_/g, ' ')}
+                          {o.lot_number && (
+                            <span className="text-gray-400 font-normal"> · {o.lot_number}</span>
+                          )}
+                        </p>
+                        {o.purpose && (
+                          <p className="text-xs text-gray-500 truncate">{o.purpose}</p>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ml-4"
+                      style={{
+                        backgroundColor: statusConfig.bg,
+                        color: statusConfig.text,
+                        border: `1px solid ${statusConfig.border}`
+                      }}
+                    >
+                      {statusConfig.label}
+                    </span>
                   </div>
-                </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  o.status === 'done' ? 'badge-active' :
-                  o.status === 'in_progress' ? 'badge-warning' : 'badge-bottled'
-                }`}>
-                  {o.status === 'done' ? 'Terminé' : o.status === 'in_progress' ? 'En cours' : 'Planifié'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+                );
+              })}
+            </div>
+          )}
+        </SectionCard>
       </div>
     </div>
   );

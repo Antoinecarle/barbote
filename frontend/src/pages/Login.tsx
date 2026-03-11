@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../lib/auth';
 
-export default function Login() {
+interface LoginProps {
+  onLoginSuccess?: () => void;
+}
+
+export default function Login({ onLoginSuccess }: LoginProps) {
   const [email, setEmail] = useState('admin@barbote.local');
   const [password, setPassword] = useState('admin123');
   const [loading, setLoading] = useState(false);
@@ -15,7 +19,8 @@ export default function Login() {
     setError('');
     try {
       await login(email, password);
-      navigate('/');
+      if (onLoginSuccess) onLoginSuccess();
+      else navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur de connexion');
     } finally {
@@ -28,7 +33,8 @@ export default function Login() {
     setError('');
     try {
       await login('admin@barbote.local', 'admin123');
-      navigate('/');
+      if (onLoginSuccess) onLoginSuccess();
+      else navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur de connexion démo');
     } finally {

@@ -61,6 +61,7 @@ export default function VideoLoader({ onComplete }: VideoLoaderProps) {
     <div
       className={`video-loading transition-opacity duration-700 ${fadeOut ? 'opacity-0' : 'opacity-100'}`}
     >
+      {/* Full-screen video */}
       <video
         ref={videoRef}
         src="/intro.mp4"
@@ -68,31 +69,79 @@ export default function VideoLoader({ onComplete }: VideoLoaderProps) {
         playsInline
         className="w-full h-full object-cover"
       />
-      <div className="video-loading-overlay">
-        <div className="flex flex-col items-center gap-4 w-full max-w-md px-8">
-          <div className="flex items-center gap-3">
-            <span className="text-4xl">🍷</span>
-            <div>
-              <h1 className="text-2xl font-bold text-white">Barbote</h1>
-              <p className="text-sm text-gray-300">Traçabilité Cuverie</p>
-            </div>
-          </div>
 
-          {/* Progress bar */}
-          <div className="w-full bg-white/20 rounded-full h-1">
-            <div
-              className="bg-bordeaux-500 h-1 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+      {/* Skip Intro button — fixed top-right, Netflix/Apple style */}
+      <button
+        onClick={handleSkip}
+        style={{
+          position: 'absolute',
+          top: '24px',
+          right: '28px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '8px 18px',
+          borderRadius: '9999px',
+          background: 'rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255, 255, 255, 0.25)',
+          color: 'rgba(255, 255, 255, 0.9)',
+          fontSize: '13px',
+          fontWeight: 500,
+          fontFamily: 'Inter, system-ui, sans-serif',
+          letterSpacing: '0.01em',
+          cursor: 'pointer',
+          transition: 'background 0.2s ease, border-color 0.2s ease, color 0.2s ease',
+          zIndex: 10,
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.28)';
+          (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255, 255, 255, 0.45)';
+          (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255, 255, 255, 1)';
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.15)';
+          (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255, 255, 255, 0.25)';
+          (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255, 255, 255, 0.9)';
+        }}
+      >
+        Passer l'intro
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ marginTop: '1px' }}
+        >
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
 
-          <button
-            onClick={handleSkip}
-            className="text-sm text-white/60 hover:text-white/90 transition-colors mt-2"
-          >
-            Passer →
-          </button>
-        </div>
+      {/* Full-width progress bar at the very bottom */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: 'rgba(255, 255, 255, 0.15)',
+          zIndex: 10,
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            width: `${progress}%`,
+            background: '#8B1A2F',
+            transition: 'width 0.3s linear',
+          }}
+        />
       </div>
     </div>
   );
