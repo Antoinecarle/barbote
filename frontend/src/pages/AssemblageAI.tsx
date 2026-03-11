@@ -397,8 +397,8 @@ function PlanDetailModal({ plan, onClose }: { plan: Plan; onClose: () => void })
     }
   };
 
+  /* Overlay — bottom-sheet on mobile, centered dialog on sm+ */
   return (
-    {/* Overlay — bottom-sheet on mobile, centered dialog on sm+ */}
     <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div
         className="bg-white w-full sm:max-w-5xl sm:rounded-xl rounded-t-xl sm:my-4 max-h-[95vh] sm:max-h-[90vh] flex flex-col"
@@ -582,13 +582,13 @@ function PlanDetailModal({ plan, onClose }: { plan: Plan; onClose: () => void })
               </div>
             )}
 
-            {/* Footer actions */}
-            <div className="flex gap-3 mt-6 pt-5 border-t border-[#E8E4DE]">
-              <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-[#5C5550] border border-[#E8E4DE] rounded-lg hover:bg-[#F5F3EF] transition-colors">
+            {/* Footer actions — flex-wrap prevents overflow on narrow screens */}
+            <div className="flex flex-wrap items-center gap-3 mt-6 pt-5 border-t border-[#E8E4DE]">
+              <button onClick={onClose} className="px-4 py-2 min-h-[44px] text-sm font-medium text-[#5C5550] border border-[#E8E4DE] rounded-lg hover:bg-[#F5F3EF] transition-colors">
                 Fermer
               </button>
               {selected && (
-                <button className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white rounded-lg hover:opacity-90 transition-opacity" style={{ backgroundColor: '#8B1A2F' }}>
+                <button className="flex items-center gap-2 px-5 py-2 min-h-[44px] text-sm font-semibold text-white rounded-lg hover:opacity-90 transition-opacity" style={{ backgroundColor: '#8B1A2F' }}>
                   <Play size={14} /> Exécuter ce scénario
                 </button>
               )}
@@ -598,6 +598,7 @@ function PlanDetailModal({ plan, onClose }: { plan: Plan; onClose: () => void })
             </div>
           </div>
         )}
+        </div>{/* end scrollable body */}
       </div>
     </div>
   );
@@ -658,19 +659,29 @@ function CreatePlanModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
   const cls = 'w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm text-[#1A1714] placeholder-[#9B9590] focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors';
 
+  /* Bottom-sheet on mobile, centered on sm+ */
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl w-full max-w-xl max-h-[92vh] overflow-y-auto" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-        <div className="flex items-center justify-between p-5 border-b border-[#E8E4DE]">
-          <h2 className="text-base font-semibold text-[#1A1714] flex items-center gap-2">
-            <Sparkles size={16} className="text-[#8B1A2F]" />
-            {step === 'form' ? "Nouveau plan d'assemblage IA"
-              : step === 'generating' ? 'Génération IA en cours\u2026'
-              : step === 'done' ? 'Scénarios générés !'
-              : 'Erreur'}
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div
+        className="bg-white w-full sm:max-w-xl sm:rounded-xl rounded-t-xl max-h-[95vh] sm:max-h-[92vh] overflow-y-auto"
+        style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+      >
+        <div className="flex items-center justify-between p-5 border-b border-[#E8E4DE] sticky top-0 bg-white z-10">
+          <h2 className="text-base font-semibold text-[#1A1714] flex items-center gap-2 min-w-0">
+            <Sparkles size={16} className="text-[#8B1A2F] flex-shrink-0" />
+            <span className="truncate">
+              {step === 'form' ? "Nouveau plan d'assemblage IA"
+                : step === 'generating' ? 'Génération IA en cours\u2026'
+                : step === 'done' ? 'Scénarios générés !'
+                : 'Erreur'}
+            </span>
           </h2>
           {step !== 'generating' && (
-            <button onClick={onClose} className="text-[#9B9590] hover:text-[#1A1714] p-1.5 rounded-lg hover:bg-[#F5F3EF]">
+            <button
+              onClick={onClose}
+              className="flex items-center justify-center min-h-[44px] min-w-[44px] text-[#9B9590] hover:text-[#1A1714] rounded-lg hover:bg-[#F5F3EF] flex-shrink-0"
+              aria-label="Fermer"
+            >
               <X size={16} />
             </button>
           )}
@@ -690,9 +701,9 @@ function CreatePlanModal({ onClose, onCreated }: { onClose: () => void; onCreate
                   \u26a0 Calcul manuel (OpenAI indisponible)
                 </p>
               )}
-              <div className="flex gap-3 mt-6">
-                <button onClick={onClose} className="flex-1 px-4 py-2 text-sm text-[#5C5550] border border-[#E8E4DE] rounded-lg hover:bg-[#F5F3EF]">Fermer</button>
-                <button onClick={() => onCreated(result)} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg" style={{ backgroundColor: '#8B1A2F' }}>
+              <div className="flex flex-wrap gap-3 mt-6">
+                <button onClick={onClose} className="flex-1 px-4 py-2 min-h-[44px] text-sm text-[#5C5550] border border-[#E8E4DE] rounded-lg hover:bg-[#F5F3EF]">Fermer</button>
+                <button onClick={() => onCreated(result)} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] text-sm font-semibold text-white rounded-lg" style={{ backgroundColor: '#8B1A2F' }}>
                   <ChevronRight size={14} /> Voir les scénarios
                 </button>
               </div>
@@ -705,7 +716,7 @@ function CreatePlanModal({ onClose, onCreated }: { onClose: () => void; onCreate
                 <X size={28} className="text-red-500" />
               </div>
               <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">{error}</p>
-              <button onClick={() => setStep('form')} className="px-5 py-2 text-sm font-medium text-white rounded-lg" style={{ backgroundColor: '#8B1A2F' }}>
+              <button onClick={() => setStep('form')} className="px-5 py-2 min-h-[44px] text-sm font-medium text-white rounded-lg" style={{ backgroundColor: '#8B1A2F' }}>
                 Réessayer
               </button>
             </div>
@@ -718,7 +729,8 @@ function CreatePlanModal({ onClose, onCreated }: { onClose: () => void; onCreate
                 <label className="block text-sm font-medium text-[#1A1714] mb-1">Nom du plan</label>
                 <input className={cls} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              {/* 2-col on sm+, 1-col on mobile */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-[#1A1714] mb-1">Volume cible (L) *</label>
                   <input type="number" className={cls} placeholder="10 000" value={form.target_volume} onChange={e => setForm({ ...form, target_volume: e.target.value })} required />
@@ -728,7 +740,7 @@ function CreatePlanModal({ onClose, onCreated }: { onClose: () => void; onCreate
                   <input className={cls} placeholder="ex. Saint-Émilion" value={form.target_appellation} onChange={e => setForm({ ...form, target_appellation: e.target.value })} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-[#1A1714] mb-1">Alcool min (%)</label>
                   <input type="number" step="0.1" className={cls} placeholder="12.0" value={form.target_alcohol_min} onChange={e => setForm({ ...form, target_alcohol_min: e.target.value })} />
@@ -748,7 +760,7 @@ function CreatePlanModal({ onClose, onCreated }: { onClose: () => void; onCreate
                 <div className="border border-[#E8E4DE] rounded-lg overflow-hidden">
                   <div className="max-h-44 overflow-y-auto divide-y divide-[#F5F3EF]">
                     {(lots as Lot[]).map(l => (
-                      <label key={l.id} className={`flex items-center gap-3 cursor-pointer px-3 py-2.5 transition-colors ${form.candidate_lot_ids.includes(l.id) ? 'bg-[#FDF2F4]' : 'hover:bg-[#F5F3EF]'}`}>
+                      <label key={l.id} className={`flex items-center gap-3 cursor-pointer px-3 py-2.5 min-h-[44px] transition-colors ${form.candidate_lot_ids.includes(l.id) ? 'bg-[#FDF2F4]' : 'hover:bg-[#F5F3EF]'}`}>
                         <input type="checkbox" checked={form.candidate_lot_ids.includes(l.id)} onChange={() => toggleLot(l.id)} className="rounded accent-[#8B1A2F]" />
                         <div className="flex-1 min-w-0">
                           <span className="text-sm text-[#1A1714] font-medium truncate block">{l.lot_number} \u2014 {l.name}</span>
@@ -775,14 +787,15 @@ function CreatePlanModal({ onClose, onCreated }: { onClose: () => void; onCreate
                 </p>
                 <p className="text-xs text-[#5C5550]">Calcul des combinaisons optimales selon vos objectifs. Durée estimée\u00a0: 15-30 secondes.</p>
               </div>
-              <div className="flex gap-3 justify-end pt-1">
-                <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-[#5C5550] border border-[#E8E4DE] rounded-lg hover:bg-[#F5F3EF]">
+              {/* Footer — flex-wrap so buttons stack on very narrow screens */}
+              <div className="flex flex-wrap gap-3 justify-end pt-1">
+                <button type="button" onClick={onClose} className="px-4 py-2 min-h-[44px] text-sm font-medium text-[#5C5550] border border-[#E8E4DE] rounded-lg hover:bg-[#F5F3EF]">
                   Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={form.candidate_lot_ids.length < 2}
-                  className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50"
+                  className="flex items-center gap-2 px-5 py-2 min-h-[44px] text-sm font-semibold text-white rounded-lg disabled:opacity-50"
                   style={{ backgroundColor: '#8B1A2F' }}
                 >
                   <Sparkles size={14} /> Générer les scénarios
@@ -942,7 +955,7 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
 
       <button
         onClick={onCreateClick}
-        className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        className="inline-flex items-center gap-2 px-6 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
         style={{ backgroundColor: '#8B1A2F' }}
       >
         <Sparkles size={16} /> Créer mon premier plan IA
