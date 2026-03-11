@@ -23,6 +23,19 @@ export default function Login() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await login('admin@barbote.local', 'admin123');
+      navigate('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur de connexion démo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-dark)' }}>
       <div className="w-full max-w-md">
@@ -78,9 +91,20 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-4 p-3 bg-[#12090c] rounded-lg">
-            <p className="text-xs text-[#c4a0aa]">Accès démo:</p>
-            <p className="text-xs text-[#f5e6ea] font-mono">admin@barbote.local / admin123</p>
+          <div className="mt-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex-1 h-px bg-[#3a1a22]" />
+              <span className="text-xs text-[#c4a0aa]">ou</span>
+              <div className="flex-1 h-px bg-[#3a1a22]" />
+            </div>
+            <button
+              type="button"
+              onClick={handleDemoLogin}
+              disabled={loading}
+              className="w-full py-3 rounded-lg border border-[#8b3a4a]/60 text-[#f5b8c4] text-sm font-medium hover:bg-[#8b3a4a]/20 hover:border-[#8b3a4a] transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              🍷 Accès démo — sans mot de passe
+            </button>
           </div>
         </div>
       </div>
