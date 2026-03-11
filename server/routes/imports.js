@@ -11,7 +11,6 @@ import multer from 'multer';
 import { query } from '../db/index.js';
 import { verifyToken } from '../middleware/auth.js';
 import path from 'path';
-import fs from 'fs';
 
 const router = express.Router();
 
@@ -36,7 +35,7 @@ const upload = multer({
  * Maps Excel column headers to DB fields
  * Supports French and English column names
  */
-const COLUMN_MAP: Record<string, string> = {
+const COLUMN_MAP = {
   // French headers
   'numéro lot': 'lot_number',
   'numero lot': 'lot_number',
@@ -70,7 +69,7 @@ const COLUMN_MAP: Record<string, string> = {
   'grape variety': 'grape_varieties_raw',
 };
 
-const WINE_TYPES: Record<string, string> = {
+const WINE_TYPES = {
   'rouge': 'rouge', 'red': 'rouge', 'r': 'rouge',
   'blanc': 'blanc', 'white': 'blanc', 'b': 'blanc',
   'rosé': 'rose', 'rose': 'rose', 'pink': 'rose',
@@ -81,7 +80,7 @@ const WINE_TYPES: Record<string, string> = {
 
 // ─── CSV parser (no dependencies needed) ─────────────────────────────────────
 
-function parseCSV(buffer: Buffer): Array<Record<string, string>> {
+function parseCSV(buffer) {
   const text = buffer.toString('utf-8');
   const lines = text.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 2) return [];
@@ -93,7 +92,7 @@ function parseCSV(buffer: Buffer): Array<Record<string, string>> {
     .filter(line => line.trim())
     .map(line => {
       const values = line.split(separator).map(v => v.trim().replace(/^["']|["']$/g, ''));
-      const row: Record<string, string> = {};
+      const row = {};
       headers.forEach((h, i) => { row[h] = values[i] || ''; });
       return row;
     });
@@ -101,7 +100,7 @@ function parseCSV(buffer: Buffer): Array<Record<string, string>> {
 
 // ─── XLSX parser (using xlsx library if available, fallback to CSV) ───────────
 
-async function parseExcel(buffer: Buffer, filename: string): Promise<Array<Record<string, string>>> {
+async function parseExcel(buffer, filename) {
   const ext = path.extname(filename).toLowerCase();
 
   if (ext === '.csv') {
@@ -117,15 +116,15 @@ async function parseExcel(buffer: Buffer, filename: string): Promise<Array<Recor
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as string[][];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
 
     if (rows.length < 2) return [];
 
-    const headers = rows[0].map((h: any) => String(h).trim().toLowerCase());
+    const headers = rows[0].map(h => String(h).trim().toLowerCase());
     return rows.slice(1)
-      .filter((row: any[]) => row.some((cell: any) => cell != null && String(cell).trim()))
-      .map((row: any[]) => {
-        const obj: Record<string, string> = {};
+      .filter(row => row.some(cell => cell != null && String(cell).trim()))
+      .map(row => {
+        const obj = {};
         headers.forEach((h, i) => { obj[h] = row[i] != null ? String(row[i]).trim() : ''; });
         return obj;
       });
@@ -139,22 +138,8 @@ async function parseExcel(buffer: Buffer, filename: string): Promise<Array<Recor
 
 // ─── Row mapper ───────────────────────────────────────────────────────────────
 
-interface MappedRow {
-  lot_number?: string;
-  name?: string;
-  type?: string;
-  appellation?: string;
-  vintage_year?: number;
-  initial_volume_liters?: number;
-  grape_varieties?: Array<{ variety: string; percentage: number }>;
-  notes?: string;
-  errors: string[];
-  warnings: string[];
-  row_index: number;
-}
-
-function mapRow(rawRow: Record<string, string>, rowIndex: number): MappedRow {
-  const mapped: MappedRow = { errors: [], warnings: [], row_index: rowIndex };
+function mapRow(rawRow, rowIndex) {
+  const mapped = { errors: [], warnings: [], row_index: rowIndex };
 
   // Map columns
   for (const [rawKey, rawValue] of Object.entries(rawRow)) {
@@ -188,7 +173,7 @@ function mapRow(rawRow: Record<string, string>, rowIndex: number): MappedRow {
     }
     else if (dbField === 'grape_varieties_raw') {
       // Parse "Merlot 80%, Cabernet 20%" or "Merlot" or "Merlot:80;Cabernet:20"
-      const varieties: Array<{ variety: string; percentage: number }> = [];
+      const varieties = [];
       const parts = rawValue.split(/[;,]/).map(p => p.trim()).filter(Boolean);
       let totalPct = 0;
 
@@ -226,7 +211,7 @@ function mapRow(rawRow: Record<string, string>, rowIndex: number): MappedRow {
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 // POST /api/imports/validate — Validate without inserting
-router.post('/validate', verifyToken, upload.single('file'), async (req: any, res: any) => {
+router.post('/validate', verifyToken, upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' });
 
   try {
@@ -236,7 +221,7 @@ router.post('/validate', verifyToken, upload.single('file'), async (req: any, re
     const mapped = rows.map((row, i) => mapRow(row, i + 2)); // row_index = Excel line number (1=header, 2=first data)
 
     // Check for duplicate lot_numbers within the file
-    const lotNumbers = mapped.filter(r => r.lot_number).map(r => r.lot_number!);
+    const lotNumbers = mapped.filter(r => r.lot_number).map(r => r.lot_number);
     const duplicatesInFile = lotNumbers.filter((n, i) => lotNumbers.indexOf(n) !== i);
     if (duplicatesInFile.length > 0) {
       mapped.forEach(r => {
@@ -276,13 +261,13 @@ router.post('/validate', verifyToken, upload.single('file'), async (req: any, re
         warnings: r.warnings,
       })),
     });
-  } catch (err: any) {
+  } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
 // POST /api/imports/lots — Import lots from Excel/CSV
-router.post('/lots', verifyToken, upload.single('file'), async (req: any, res: any) => {
+router.post('/lots', verifyToken, upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Aucun fichier fourni' });
 
   const { skip_errors = 'false', dry_run = 'false' } = req.query;
@@ -324,8 +309,8 @@ router.post('/lots', verifyToken, upload.single('file'), async (req: any, res: a
     }
 
     // Insert valid rows
-    const inserted: string[] = [];
-    const skipped: Array<{ lot_number: string; reason: string }> = [];
+    const inserted = [];
+    const skipped = [];
 
     for (const row of validRows) {
       try {
@@ -346,9 +331,9 @@ router.post('/lots', verifyToken, upload.single('file'), async (req: any, res: a
             req.user.id,
           ]
         );
-        inserted.push(row.lot_number!);
-      } catch (dbErr: any) {
-        skipped.push({ lot_number: row.lot_number!, reason: dbErr.message });
+        inserted.push(row.lot_number);
+      } catch (dbErr) {
+        skipped.push({ lot_number: row.lot_number, reason: dbErr.message });
       }
     }
 
@@ -360,13 +345,13 @@ router.post('/lots', verifyToken, upload.single('file'), async (req: any, res: a
       skipped_details: skipped,
       warnings: validRows.flatMap(r => r.warnings.map(w => `Lot ${r.lot_number}: ${w}`)),
     });
-  } catch (err: any) {
+  } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
 // GET /api/imports/template — Download CSV template
-router.get('/template', verifyToken, (req: any, res: any) => {
+router.get('/template', verifyToken, (req, res) => {
   const headers = [
     'N° Lot', 'Nom', 'Type', 'Appellation', 'Millésime',
     'Volume (L)', 'Cépages', 'Notes'
