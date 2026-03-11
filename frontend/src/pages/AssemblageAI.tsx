@@ -138,7 +138,8 @@ function AnalysisGauge({ param, value }: { param: typeof ANALYSIS_PARAMS[0]; val
 function ProportionBar({ percentage, lotNumber, volume }: { percentage: number; lotNumber: string; volume: number }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { const t = setTimeout(() => setMounted(true), 150); return () => clearTimeout(t); }, []);
-  const hue = (parseInt(lotNumber.replace(/\D/g, '') || '0') * 47) % 360;
+  const safeNumber = String(lotNumber ?? '0');
+  const hue = (parseInt(safeNumber.replace(/\D/g, '') || '0') * 47) % 360;
   return (
     <div className="mb-2">
       <div className="flex justify-between text-xs mb-1">
@@ -160,16 +161,18 @@ function ProportionBar({ percentage, lotNumber, volume }: { percentage: number; 
 function MiniProportionBar({ lots }: { lots: Array<{ lot_number: string; percentage: number }> }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { const t = setTimeout(() => setMounted(true), 120); return () => clearTimeout(t); }, []);
+  const safeLots = (lots ?? []).filter(l => l != null);
   return (
     <div className="flex h-2 w-full rounded-full overflow-hidden gap-px bg-[#E8E4DE]">
-      {lots.map((l, i) => {
-        const hue = (parseInt(l.lot_number.replace(/\D/g, '') || String(i)) * 47) % 360;
+      {safeLots.map((l, i) => {
+        const hue = (parseInt(String(l.lot_number ?? i).replace(/\D/g, '') || String(i)) * 47) % 360;
+        const pct = l.percentage ?? 0;
         return (
           <div
             key={i}
             className="h-full transition-all duration-700 ease-out"
-            title={`${l.lot_number}: ${l.percentage}%`}
-            style={{ width: mounted ? `${l.percentage}%` : '0%', backgroundColor: `hsl(${hue},55%,48%)` }}
+            title={`${l.lot_number ?? '?'}: ${pct}%`}
+            style={{ width: mounted ? `${pct}%` : '0%', backgroundColor: `hsl(${hue},55%,48%)` }}
           />
         );
       })}
@@ -378,11 +381,32 @@ function AIGenerationSteps() {
 
 // ─── PlanDetailModal ───────────────────────────────────────────────────────────
 
+// Normalize a scenario from any DB format to the expected frontend format
+function normalizeScenario(s: any): Scenario {
+  return {
+    id: s.id ?? '',
+    name: s.name ?? 'Scénario',
+    lots: (s.lots ?? s.blend ?? []).map((l: any) => ({
+      lot_id: l.lot_id ?? '',
+      lot_number: l.lot_number ?? '?',
+      percentage: l.percentage ?? l.percent ?? 0,
+      volume_liters: l.volume_liters ?? l.volume ?? 0,
+    })),
+    predicted_analysis: s.predicted_analysis ?? {},
+    quality_score: s.quality_score ?? s.score ?? s.predicted_score ?? 0,
+    profile: s.profile ?? '',
+    reasoning: s.reasoning ?? s.ai_comment ?? '',
+    risks: Array.isArray(s.risks) ? s.risks : [],
+    advantages: Array.isArray(s.advantages) ? s.advantages : [],
+    is_fallback: s.is_fallback ?? false,
+  };
+}
+
 function PlanDetailModal({ plan, onClose }: { plan: Plan; onClose: () => void }) {
-  const scenarios = plan.scenarios || [];
+  const scenarios = (plan.scenarios ?? []).map(normalizeScenario);
   const [selected, setSelected] = useState<string | null>(null);
   const [reasoningVisible, setReasoningVisible] = useState(false);
-  const sorted = [...scenarios].sort((a, b) => b.quality_score - a.quality_score);
+  const sorted = [...scenarios].sort((a, b) => (b.quality_score ?? 0) - (a.quality_score ?? 0));
   const selectedScenario = selected ? scenarios.find(sc => sc.id === selected) : null;
   const totalLotsInvolved = selectedScenario ? selectedScenario.lots.length : 0;
 
@@ -813,7 +837,7 @@ function CreatePlanModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
 function PlanCard({ plan, onClick }: { plan: Plan; onClick: () => void }) {
   const [hovered, setHovered] = useState(false);
-  const scenarios = plan.scenarios || [];
+  const scenarios = (plan.scenarios ?? []).map(normalizeScenario);
   const bestScore = scenarios.length > 0 ? Math.max(...scenarios.map(s => s.quality_score || 0)) : null;
   const bestScenario = scenarios.length > 0 ? [...scenarios].sort((a, b) => b.quality_score - a.quality_score)[0] : null;
   const isReady = plan.status === 'scenarios_ready';
