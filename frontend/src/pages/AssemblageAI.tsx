@@ -143,7 +143,7 @@ function ProportionBar({ percentage, lotNumber, volume }: { percentage: number; 
     <div className="mb-2">
       <div className="flex justify-between text-xs mb-1">
         <span className="text-[#1A1714] font-medium">{lotNumber}</span>
-        <span className="text-[#5C5550]">{percentage}%\u00a0\u00b7\u00a0{Number(volume).toLocaleString('fr')} L</span>
+        <span className="text-[#5C5550]">{percentage}% · {Number(volume).toLocaleString('fr')} L</span>
       </div>
       <div className="h-2 bg-[#E8E4DE] rounded-full overflow-hidden">
         <div
@@ -233,10 +233,10 @@ function ScenarioComparisonTable({ scenarios }: { scenarios: Scenario[] }) {
                             }`}
                           >
                             {val.toFixed(1)}{param.unit}
-                            {isBest && <span className="ml-1 text-green-600 text-[10px]">\u2713</span>}
+                            {isBest && <span className="ml-1 text-green-600 text-[10px]">✓</span>}
                           </span>
                         ) : (
-                          <span className="text-[#9B9590]">\u2014</span>
+                          <span className="text-[#9B9590]">—</span>
                         )}
                       </td>
                     );
@@ -253,7 +253,7 @@ function ScenarioComparisonTable({ scenarios }: { scenarios: Scenario[] }) {
                 return (
                   <td key={s.id} className="text-center px-3 py-2.5">
                     <span className={`inline-flex items-center gap-1 font-mono font-bold px-2 py-0.5 rounded ${isBest ? 'bg-amber-100 text-amber-800' : 'text-[#8B1A2F]'}`}>
-                      {isBest && <span className="text-amber-500">\u2605</span>}
+                      {isBest && <span className="text-amber-500">★</span>}
                       {s.quality_score}
                       <span className="text-[10px] font-normal opacity-60">/100</span>
                     </span>
@@ -313,7 +313,7 @@ function AIGenerationSteps() {
           <Sparkles size={16} className="text-[#8B1A2F] animate-pulse" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-semibold text-[#1A1714]">IA en cours de calcul\u2026</p>
+          <p className="text-sm font-semibold text-[#1A1714]">IA en cours de calcul…</p>
           <p className="text-xs text-[#9B9590]">Patientez, les scénarios sont générés pour vous</p>
         </div>
         {secondsLeft > 0 && (
@@ -417,8 +417,8 @@ function PlanDetailModal({ plan, onClose }: { plan: Plan; onClose: () => void })
               )}
             </div>
             <p className="text-sm text-[#5C5550]">
-              Volume cible\u00a0: {Number(plan.target_volume_liters).toLocaleString('fr')} L
-              {plan.target_appellation && ` \u00b7 ${plan.target_appellation}`}
+              Volume cible : {Number(plan.target_volume_liters).toLocaleString('fr')} L
+              {plan.target_appellation && ` · ${plan.target_appellation}`}
             </p>
           </div>
           {/* Touch-friendly 44x44 close button */}
@@ -443,7 +443,7 @@ function PlanDetailModal({ plan, onClose }: { plan: Plan; onClose: () => void })
             <div className="flex items-center gap-2 mb-5 px-3 py-2 bg-[#FDF2F4] border border-[#F3C5CE] rounded-lg">
               <Award size={14} className="text-[#8B1A2F]" />
               <span className="text-xs text-[#8B1A2F] font-medium">
-                Meilleur scénario\u00a0: <strong>{sorted[0]?.name}</strong> (score {sorted[0]?.quality_score}/100)
+                Meilleur scénario : <strong>{sorted[0]?.name}</strong> (score {sorted[0]?.quality_score}/100)
               </span>
             </div>
 
@@ -465,7 +465,7 @@ function PlanDetailModal({ plan, onClose }: { plan: Plan; onClose: () => void })
                     <div>
                       {i === 0 && (
                         <span className="text-xs text-amber-700 font-semibold bg-amber-100 px-2 py-0.5 rounded-full mb-1.5 inline-block">
-                          \u2605 Recommandé
+                          ★ Recommandé
                         </span>
                       )}
                       <h3 className="font-semibold text-[#1A1714] text-sm">{s.name}</h3>
@@ -496,7 +496,7 @@ function PlanDetailModal({ plan, onClose }: { plan: Plan; onClose: () => void })
 
                   {s.profile && <p className="text-xs text-[#5C5550] italic mb-3">{s.profile}</p>}
                   {s.advantages?.slice(0, 2).map((a, j) => (
-                    <p key={j} className="text-xs text-green-700">\u2713 {a}</p>
+                    <p key={j} className="text-xs text-green-700">✓ {a}</p>
                   ))}
                   {s.risks?.[0] && (
                     <p className="text-xs text-amber-700 flex items-start gap-1 mt-1">
@@ -531,7 +531,7 @@ function PlanDetailModal({ plan, onClose }: { plan: Plan; onClose: () => void })
               >
                 <div className="p-5 bg-[#F5F3EF] rounded-xl border border-[#E8E4DE]">
                   <p className="text-xs font-semibold text-[#5C5550] uppercase tracking-wide mb-3">
-                    Raisonnement IA \u2014 {selectedScenario.name}
+                    Raisonnement IA — {selectedScenario.name}
                   </p>
                   {selectedScenario.reasoning && (
                     <p className="text-sm text-[#1A1714] leading-relaxed mb-4">{selectedScenario.reasoning}</p>
@@ -545,7 +545,7 @@ function PlanDetailModal({ plan, onClose }: { plan: Plan; onClose: () => void })
                           <ul className="space-y-1">
                             {selectedScenario.advantages.map((a, i) => (
                               <li key={i} className="text-xs text-green-700 flex items-start gap-1.5">
-                                <span className="mt-0.5 flex-shrink-0">\u2713</span>{a}
+                                <span className="mt-0.5 flex-shrink-0">✓</span>{a}
                               </li>
                             ))}
                           </ul>
@@ -698,7 +698,7 @@ function CreatePlanModal({ onClose, onCreated }: { onClose: () => void; onCreate
               <p className="text-sm text-[#5C5550] mb-1">{result.lots_analyzed} lots analysés</p>
               {result.used_fallback && (
                 <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
-                  \u26a0 Calcul manuel (OpenAI indisponible)
+                  ⚠ Calcul manuel (OpenAI indisponible)
                 </p>
               )}
               <div className="flex flex-wrap gap-3 mt-6">
@@ -763,7 +763,7 @@ function CreatePlanModal({ onClose, onCreated }: { onClose: () => void; onCreate
                       <label key={l.id} className={`flex items-center gap-3 cursor-pointer px-3 py-2.5 min-h-[44px] transition-colors ${form.candidate_lot_ids.includes(l.id) ? 'bg-[#FDF2F4]' : 'hover:bg-[#F5F3EF]'}`}>
                         <input type="checkbox" checked={form.candidate_lot_ids.includes(l.id)} onChange={() => toggleLot(l.id)} className="rounded accent-[#8B1A2F]" />
                         <div className="flex-1 min-w-0">
-                          <span className="text-sm text-[#1A1714] font-medium truncate block">{l.lot_number} \u2014 {l.name}</span>
+                          <span className="text-sm text-[#1A1714] font-medium truncate block">{l.lot_number} — {l.name}</span>
                           <span className="text-xs text-[#9B9590]">{l.type} {l.vintage_year || ''}</span>
                         </div>
                         <span className="text-xs text-[#5C5550] whitespace-nowrap">{Number(l.current_volume_liters).toLocaleString('fr')} L</span>
@@ -785,7 +785,7 @@ function CreatePlanModal({ onClose, onCreated }: { onClose: () => void; onCreate
                 <p className="text-xs text-[#8B1A2F] flex items-center gap-1.5 mb-1 font-semibold">
                   <Sparkles size={12} /> L'IA va générer 3 scénarios d'assemblage
                 </p>
-                <p className="text-xs text-[#5C5550]">Calcul des combinaisons optimales selon vos objectifs. Durée estimée\u00a0: 15-30 secondes.</p>
+                <p className="text-xs text-[#5C5550]">Calcul des combinaisons optimales selon vos objectifs. Durée estimée : 15-30 secondes.</p>
               </div>
               {/* Footer — flex-wrap so buttons stack on very narrow screens */}
               <div className="flex flex-wrap gap-3 justify-end pt-1">
@@ -864,12 +864,12 @@ function PlanCard({ plan, onClick }: { plan: Plan; onClick: () => void }) {
       </div>
 
       <div className="space-y-1.5 text-xs text-[#5C5550]">
-        <p>Volume cible\u00a0: <span className="text-[#1A1714] font-medium">{Number(plan.target_volume_liters).toLocaleString('fr')} L</span></p>
+        <p>Volume cible : <span className="text-[#1A1714] font-medium">{Number(plan.target_volume_liters).toLocaleString('fr')} L</span></p>
         {plan.target_appellation && <p>{plan.target_appellation}</p>}
         <div className="flex items-center justify-between">
           <p>{scenarios.length} scénario{scenarios.length > 1 ? 's' : ''}</p>
           {bestScore != null && (
-            <span className="font-mono font-bold text-[#8B1A2F]">\u2605 {bestScore}/100</span>
+            <span className="font-mono font-bold text-[#8B1A2F]">★ {bestScore}/100</span>
           )}
         </div>
       </div>
