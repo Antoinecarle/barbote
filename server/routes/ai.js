@@ -1,26 +1,16 @@
 import express from 'express';
-import OpenAI from 'openai';
 import { query } from '../db/index.js';
 import { verifyToken } from '../middleware/auth.js';
+import {
+  openai,
+  PROMPT_REGISTRY,
+  withAIGuards,
+  calculateAssemblageFallback,
+} from '../services/ai-service.js';
 
 const router = express.Router();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const WINE_SYSTEM_PROMPT = `Tu es un assistant oenologue expert en traçabilité cuverie et vinification.
-Tu aides les vignerons et oenologues à :
-- Analyser les lots de vin et leurs caractéristiques
-- Proposer des plans d'assemblage optimaux avec plusieurs scénarios
-- Interpréter les analyses chimiques
-- Recalculer les matrices d'analyses après assemblage
-- Répondre aux questions sur la traçabilité et les mouvements
-- Donner des recommandations sur les opérations à effectuer
-
-Tu communiques en français, de façon professionnelle mais accessible.
-Tu cites toujours tes sources de données (lots, analyses, mouvements).
-Tu expliques tes calculs et raisonnements.
-Tu respectes les règles réglementaires viticoles françaises (IGP, AOC, etc.).
-
-Format de réponse: Markdown structuré avec tableaux si nécessaire.`;
+const WINE_SYSTEM_PROMPT = PROMPT_REGISTRY.WINE_ASSISTANT.content;
 
 // GET /api/ai/conversations
 router.get('/conversations', verifyToken, async (req, res) => {
@@ -120,7 +110,7 @@ router.post('/chat', verifyToken, async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
 
     const stream = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5-mini-2025-08-07',
       messages,
       stream: true,
       max_tokens: 2000
@@ -138,7 +128,7 @@ router.post('/chat', verifyToken, async (req, res) => {
     // Save assistant response
     await query(
       'INSERT INTO barbote_messages (conversation_id, role, content, model) VALUES ($1, $2, $3, $4)',
-      [conversation_id, 'assistant', fullResponse, 'gpt-4o-mini']
+      [conversation_id, 'assistant', fullResponse, 'gpt-5-mini-2025-08-07']
     );
 
     // Update conversation metadata
@@ -158,11 +148,18 @@ router.post('/chat', verifyToken, async (req, res) => {
   }
 });
 
-// POST /api/ai/assemblage - Generate assemblage scenarios
+// POST /api/ai/assemblage - Generate assemblage scenarios (with fallback)
 router.post('/assemblage', verifyToken, async (req, res) => {
-  try {
-    const { target_volume, target_analysis, candidate_lot_ids, constraints, name } = req.body;
+  const { target_volume, target_analysis, candidate_lot_ids, constraints, name } = req.body;
 
+  if (!candidate_lot_ids?.length || candidate_lot_ids.length < 2) {
+    return res.status(400).json({ error: 'Au moins 2 lots candidats requis' });
+  }
+  if (!target_volume || Number(target_volume) <= 0) {
+    return res.status(400).json({ error: 'Volume cible invalide' });
+  }
+
+  try {
     // Fetch lot details and analyses
     const lotsRes = await query(
       `SELECT l.*,
@@ -172,78 +169,89 @@ router.post('/assemblage', verifyToken, async (req, res) => {
     );
 
     if (lotsRes.rows.length === 0) {
-      return res.status(400).json({ error: 'Aucun lot disponible trouvé' });
+      return res.status(400).json({ error: 'Aucun lot actif trouvé parmi les candidats' });
     }
 
     // Create assemblage plan
     const planRes = await query(
       `INSERT INTO barbote_assemblage_plans (name, target_volume_liters, target_analysis, constraints, candidate_lots, status, created_by)
        VALUES ($1, $2, $3, $4, $5, 'pending_ai', $6) RETURNING *`,
-      [name || 'Plan d\'assemblage', target_volume, JSON.stringify(target_analysis || {}),
-       JSON.stringify(constraints || {}), JSON.stringify(lotsRes.rows.map(l => l.id)), req.user.id]
+      [
+        name || `Plan d'assemblage ${new Date().toLocaleDateString('fr-FR')}`,
+        target_volume,
+        JSON.stringify(target_analysis || {}),
+        JSON.stringify(constraints || {}),
+        JSON.stringify(lotsRes.rows.map(l => l.id)),
+        req.user.id,
+      ]
     );
     const plan = planRes.rows[0];
 
-    // Build prompt for AI scenarios
-    const lotsDescription = lotsRes.rows.map(l => {
-      const a = l.latest_analysis;
-      return `- Lot ${l.lot_number} (${l.name}): ${l.type} ${l.vintage_year || ''}, ${l.appellation || ''}, Volume dispo: ${l.current_volume_liters}L, Cépages: ${JSON.stringify(l.grape_varieties)}${a ? `, Alcool: ${a.alcohol_percent}%, AT: ${a.total_acidity_gl}g/L, AV: ${a.volatile_acidity_gl}g/L, pH: ${a.ph}, SO2L: ${a.free_so2_mgl}mg/L` : ''}`;
-    }).join('\n');
+    let aiResult;
+    let usedFallback = false;
+    let modelUsed = 'gpt-5-mini-2025-08-07';
 
-    const prompt = `Tu es oenologue expert. Génère 3 scénarios d'assemblage optimaux.
+    // Try AI first, fall back to manual calculation
+    try {
+      const lotsDescription = lotsRes.rows.map(l => {
+        const a = l.latest_analysis;
+        return `- Lot ${l.lot_number} (${l.name}): ${l.type} ${l.vintage_year || ''}, ${l.appellation || ''}, ` +
+          `Volume dispo: ${l.current_volume_liters}L, Cépages: ${JSON.stringify(l.grape_varieties)}` +
+          (a ? `, Alcool: ${a.alcohol_percent}%, AT: ${a.total_acidity_gl}g/L, AV: ${a.volatile_acidity_gl}g/L, pH: ${a.ph}, SO2L: ${a.free_so2_mgl}mg/L` : ' (pas d\'analyse récente)');
+      }).join('\n');
 
-Objectif: ${target_volume}L de vin assemblé
-Appellation cible: ${target_analysis?.appellation || 'Non définie'}
-Objectifs analytiques: ${JSON.stringify(target_analysis)}
-Contraintes: ${JSON.stringify(constraints)}
+      const promptContent = PROMPT_REGISTRY.ASSEMBLAGE_SCENARIOS.content(
+        lotsDescription, target_volume, target_analysis, constraints
+      );
 
-Lots disponibles:
-${lotsDescription}
-
-Pour chaque scénario, fournis en JSON strict:
-{
-  "scenarios": [
-    {
-      "id": "scenario_1",
-      "name": "Nom du scénario",
-      "lots": [{"lot_id": "ID", "lot_number": "NUM", "percentage": 50, "volume_liters": 5000}],
-      "predicted_analysis": {"alcohol_percent": 13.5, "total_acidity_gl": 5.2, "volatile_acidity_gl": 0.4, "ph": 3.5, "free_so2_mgl": 25},
-      "quality_score": 85,
-      "profile": "Description du profil organoleptique attendu",
-      "reasoning": "Justification détaillée du choix",
-      "risks": ["Risque 1"],
-      "advantages": ["Avantage 1"]
+      aiResult = await withAIGuards(
+        async () => {
+          const response = await openai.chat.completions.create({
+            model: 'gpt-5-mini-2025-08-07',
+            messages: [
+              { role: 'system', content: 'Tu es oenologue expert. Réponds UNIQUEMENT en JSON valide sans markdown.' },
+              { role: 'user', content: promptContent },
+            ],
+            max_tokens: 3000,
+            response_format: { type: 'json_object' },
+          });
+          return JSON.parse(response.choices[0].message.content);
+        },
+        'assemblage_scenarios',
+        { plan_id: plan.id, lots_count: lotsRes.rows.length }
+      );
+    } catch (aiErr) {
+      console.warn('[AI fallback] OpenAI failed for assemblage, using manual calculation:', aiErr.message);
+      aiResult = calculateAssemblageFallback(lotsRes.rows, Number(target_volume), target_analysis);
+      usedFallback = true;
+      modelUsed = 'manual_fallback_v1';
     }
-  ]
-}`;
-
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'Tu es oenologue expert. Réponds UNIQUEMENT en JSON valide sans markdown.' },
-        { role: 'user', content: prompt }
-      ],
-      max_tokens: 3000,
-      response_format: { type: 'json_object' }
-    });
-
-    const aiResult = JSON.parse(response.choices[0].message.content);
 
     // Update plan with scenarios
     await query(
-      `UPDATE barbote_assemblage_plans SET scenarios = $1, status = 'scenarios_ready',
-       ai_model_used = 'gpt-4o-mini', updated_at = NOW() WHERE id = $2`,
-      [JSON.stringify(aiResult.scenarios || []), plan.id]
+      `UPDATE barbote_assemblage_plans
+       SET scenarios = $1, status = 'scenarios_ready',
+           ai_model_used = $2, ai_prompt_version = $3, updated_at = NOW()
+       WHERE id = $4`,
+      [
+        JSON.stringify(aiResult.scenarios || []),
+        modelUsed,
+        PROMPT_REGISTRY.ASSEMBLAGE_SCENARIOS.version,
+        plan.id,
+      ]
     );
 
     res.json({
       plan_id: plan.id,
       scenarios: aiResult.scenarios || [],
-      lots_analyzed: lotsRes.rows.length
+      lots_analyzed: lotsRes.rows.length,
+      used_fallback: usedFallback,
+      model_used: modelUsed,
+      prompt_version: PROMPT_REGISTRY.ASSEMBLAGE_SCENARIOS.version,
     });
   } catch (err) {
     console.error('Assemblage AI error:', err);
-    res.status(500).json({ error: 'Erreur IA assemblage: ' + err.message });
+    res.status(500).json({ error: 'Erreur assemblage: ' + err.message });
   }
 });
 
@@ -295,7 +303,7 @@ MOUVEMENTS RÉCENTS: ${JSON.stringify(movementsRes.rows)}
 ANALYSES RÉCENTES: ${JSON.stringify(analysesRes.rows)}`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5-mini-2025-08-07',
       messages: [
         { role: 'system', content: WINE_SYSTEM_PROMPT + '\n' + context },
         { role: 'user', content: question }
@@ -311,6 +319,128 @@ ANALYSES RÉCENTES: ${JSON.stringify(analysesRes.rows)}`;
     console.error('AI query error:', err);
     res.status(500).json({ error: 'Erreur IA: ' + err.message });
   }
+});
+
+// GET /api/ai/conversations/:id/synthesis - Generate markdown synthesis of a conversation
+router.get('/conversations/:id/synthesis', verifyToken, async (req, res) => {
+  try {
+    const convId = req.params.id;
+
+    // Fetch conversation metadata
+    const convRes = await query(
+      'SELECT * FROM barbote_conversations WHERE id = $1 AND user_id = $2',
+      [convId, req.user.id]
+    );
+    if (convRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Conversation non trouvée' });
+    }
+    const conv = convRes.rows[0];
+
+    // Fetch all messages
+    const msgRes = await query(
+      'SELECT role, content, created_at FROM barbote_messages WHERE conversation_id = $1 ORDER BY created_at ASC',
+      [convId]
+    );
+    if (msgRes.rows.length === 0) {
+      return res.status(400).json({ error: 'La conversation est vide' });
+    }
+
+    // Build conversation transcript for AI
+    const transcript = msgRes.rows
+      .map(m => `**${m.role === 'user' ? 'Utilisateur' : 'Assistant'}** (${new Date(m.created_at).toLocaleString('fr-FR')})\n${m.content}`)
+      .join('\n\n---\n\n');
+
+    const synthesisPrompt = `Tu es un oenologue expert. Génère une synthèse professionnelle en Markdown de la conversation suivante.
+
+La synthèse doit inclure :
+1. **Résumé exécutif** — Problématique principale abordée (2-3 phrases)
+2. **Points clés analysés** — Lots, analyses, volumes, paramètres discutés (tableau si pertinent)
+3. **Recommandations** — Opérations préconisées, ajustements SO₂, assemblages suggérés
+4. **Points de vigilance** — Risques identifiés, paramètres hors normes
+5. **Actions à entreprendre** — Liste numérotée des actions prioritaires
+
+Format : Markdown structuré, professionnel, en français.
+Date de génération : ${new Date().toLocaleDateString('fr-FR')}
+Titre : "${conv.title || 'Synthèse cave'}"
+
+--- CONVERSATION ---
+${transcript}
+--- FIN ---`;
+
+    const aiRes = await openai.chat.completions.create({
+      model: 'gpt-5-mini-2025-08-07',
+      messages: [
+        { role: 'system', content: 'Tu es oenologue expert. Génère des synthèses professionnelles en Markdown structuré.' },
+        { role: 'user', content: synthesisPrompt }
+      ],
+      max_tokens: 2500
+    });
+
+    const content = aiRes.choices[0].message.content;
+    const dateStr = new Date().toISOString().split('T')[0];
+    const filename = `synthese-cave-${dateStr}.md`;
+
+    res.json({ content, filename });
+  } catch (err) {
+    console.error('Synthesis error:', err);
+    res.status(500).json({ error: 'Erreur génération synthèse: ' + err.message });
+  }
+});
+
+// GET /api/ai/metrics - AI quality metrics dashboard
+router.get('/metrics', verifyToken, async (req, res) => {
+  try {
+    const result = await query(`
+      SELECT
+        operation,
+        COUNT(*) as total_calls,
+        COUNT(*) FILTER (WHERE success = true) as success_count,
+        COUNT(*) FILTER (WHERE success = false) as error_count,
+        ROUND(AVG(latency_ms)) as avg_latency_ms,
+        ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY latency_ms)) as p50_ms,
+        ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY latency_ms)) as p95_ms,
+        MAX(latency_ms) as max_latency_ms,
+        ROUND(100.0 * COUNT(*) FILTER (WHERE success = true) / COUNT(*), 1) as success_rate_pct
+      FROM barbote_ai_metrics
+      WHERE created_at > NOW() - INTERVAL '7 days'
+      GROUP BY operation
+      ORDER BY total_calls DESC
+    `);
+
+    const recentErrors = await query(`
+      SELECT operation, error_message, created_at
+      FROM barbote_ai_metrics
+      WHERE success = false AND created_at > NOW() - INTERVAL '24 hours'
+      ORDER BY created_at DESC
+      LIMIT 10
+    `);
+
+    res.json({
+      period: '7 days',
+      by_operation: result.rows,
+      recent_errors: recentErrors.rows,
+      prompt_versions: Object.entries(Object.fromEntries(
+        Object.entries(PROMPT_REGISTRY).map(([k, v]) => [k, v.version])
+      )),
+    });
+  } catch (err) {
+    // Table may not exist yet
+    if (err.message?.includes('does not exist')) {
+      return res.json({ period: '7 days', by_operation: [], recent_errors: [], prompt_versions: [] });
+    }
+    res.status(500).json({ error: 'Erreur métriques IA: ' + err.message });
+  }
+});
+
+// GET /api/ai/prompt-registry - List available prompt versions
+router.get('/prompt-registry', verifyToken, async (req, res) => {
+  const registry = Object.entries(PROMPT_REGISTRY).map(([key, prompt]) => ({
+    key,
+    id: prompt.id,
+    version: prompt.version,
+    is_template: typeof prompt.content === 'function',
+  }));
+  res.json(registry);
 });
 
 export default router;

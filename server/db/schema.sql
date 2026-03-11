@@ -347,6 +347,24 @@ CREATE INDEX IF NOT EXISTS idx_operations_date ON barbote_operations(date);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON barbote_notifications(user_id, read);
 
 -- =============================================================================
+-- AI METRICS (Latency, Success Rate, Error Tracking)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS barbote_ai_metrics (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  operation VARCHAR(100) NOT NULL,
+  success BOOLEAN NOT NULL,
+  latency_ms INTEGER NOT NULL,
+  attempt INTEGER DEFAULT 1,
+  error_message TEXT,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_metrics_operation ON barbote_ai_metrics(operation, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_metrics_success ON barbote_ai_metrics(success, created_at DESC);
+
+-- =============================================================================
 -- AUDIT TRIGGER FUNCTION
 -- Automatically logs INSERT/UPDATE/DELETE on critical tables
 -- =============================================================================
