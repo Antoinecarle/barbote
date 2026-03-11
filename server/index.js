@@ -20,6 +20,7 @@ import operationsRouter from './routes/operations.js';
 import maintenanceRouter from './routes/maintenance.js';
 import dashboardRouter from './routes/dashboard.js';
 import monitoringRouter from './routes/monitoring.js';
+import importsRouter from './routes/imports.js';
 import { monitoring } from './services/monitoring.js';
 import { query } from './db/index.js';
 
@@ -63,6 +64,7 @@ app.use('/api/ai', aiRouter);
 app.use('/api/operations', operationsRouter);
 app.use('/api/maintenance', maintenanceRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/imports', importsRouter);
 
 // Health check
 app.get('/api/health', async (req, res) => {
