@@ -41,18 +41,29 @@
 | US-015 | CI/CD GitHub Actions | ✅ |
 | US-016 | Docker + PM2 config | ✅ |
 
-### 🔲 À FAIRE (Sprint 2)
+### 🔄 EN COURS (Sprint 2 — semaines 5-8)
 
-| ID | Feature | Priorité |
-|---|---|---|
-| US-017 | Export PDF/CSV des rapports | High |
-| US-018 | Import Excel lots (module négociants) | Medium |
-| US-019 | Notifications temps réel (SO₂ bas, etc.) | Medium |
-| US-020 | Gestion multi-utilisateurs (invitations) | High |
-| US-021 | OCR bons d'intervention (maintenance) | Low |
-| US-022 | Mobile responsive optimization | Medium |
-| US-023 | Tests unitaires backend | High |
-| US-024 | Monitoring/alertes (Sentry/Grafana) | Medium |
+| ID | Feature | Priorité | Points | Critères d'acceptation |
+|---|---|---|---|---|
+| US-017 | Export PDF/CSV des rapports | High | 5 | Export lot + analyses + mouvements en PDF/CSV depuis LotDetail |
+| US-018 | Import Excel lots (module négociants) | Medium | 8 | Upload .xlsx, mapping colonnes, validation, création lots en batch |
+| US-019 | Alertes SO₂ bas (< seuil configurable) | Medium | 3 | Badge rouge dans header + notification persistante |
+| US-020 | Gestion multi-utilisateurs + invitations | High | 8 | Admin invite par email, rôles (admin/oeno/operator/viewer) |
+| US-021 | OCR bons d'intervention (maintenance) | Low | 13 | Upload photo → extraction texte → pré-remplissage formulaire |
+| US-022 | Optimisation mobile responsive | Medium | 3 | Tables scrollables, modals fullscreen, nav hamburger |
+| US-023 | Tests unitaires backend (60% coverage) | High | 5 | Jest + coverage report, tests lots + mouvements + audit |
+| US-024 | Monitoring prod (Sentry + health endpoint) | Medium | 3 | /api/health endpoint + Sentry DSN configuré |
+
+### 🔲 À FAIRE (Sprint 3 — semaines 9-12)
+
+| ID | Feature | Priorité | Points | Critères d'acceptation |
+|---|---|---|---|---|
+| US-025 | Prompts IA versionnés (prompt registry) | High | 5 | Prompts storés en DB avec version, A/B testing possible |
+| US-026 | Métriques qualité IA (taux d'erreur, latence) | Medium | 5 | Dashboard qualité IA avec p50/p95 latences |
+| US-027 | Fallback non-IA pour assemblage | High | 3 | Calcul pondéré manuel si OpenAI timeout |
+| US-028 | Extension agroalimentaire: paramétrage | Low | 13 | Config nomenclatures/process dans settings admin |
+| US-029 | API publique (read-only) pour intégrations | Low | 8 | API key auth, endpoints GET lots/analyses |
+| US-030 | PWA / mode hors-ligne (lecture seule) | Low | 13 | Service Worker + cache lots/analyses |
 
 ---
 
