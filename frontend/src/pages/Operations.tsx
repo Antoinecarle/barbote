@@ -53,7 +53,7 @@ export default function Operations() {
 
   return (
     <div>
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6">
 
         {/* Page header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -80,7 +80,7 @@ export default function Operations() {
         </div>
 
         {/* Filters */}
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <select
             className="rounded-lg border border-[#E8E4DE] px-3 py-2 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors duration-150 hover:bg-[#F5F3EF]"
             style={{ color: '#1A1714' }}
@@ -94,76 +94,145 @@ export default function Operations() {
           </select>
         </div>
 
-        {/* Table card */}
+        {/* Desktop Table (hidden on mobile) */}
         <div
-          className="bg-white rounded-xl border border-[#E8E4DE] overflow-hidden"
+          className="hidden md:block bg-white rounded-xl border border-[#E8E4DE] overflow-hidden"
           style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}
         >
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#E8E4DE] bg-[#FDFCFA]">
-                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>
-                  Date
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>
-                  Opération
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>
-                  Lot
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>
-                  Objectif
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>
-                  Statut
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}>
-                    <td colSpan={5} className="px-4 py-3">
-                      <div className="h-4 w-full bg-gray-100 rounded animate-pulse" />
-                    </td>
-                  </tr>
-                ))
-              ) : operations.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center py-12 text-sm" style={{ color: '#9B9590' }}>
-                    <Beaker size={32} className="mx-auto mb-2 opacity-30" />
-                    Aucune opération
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[500px] table-fixed">
+              <thead>
+                <tr className="border-b border-[#E8E4DE] bg-[#FDFCFA]">
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>
+                    Date
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>
+                    Opération
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>
+                    Lot
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>
+                    Objectif
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>
+                    Statut
+                  </th>
                 </tr>
-              ) : (
-                operations.map((op: any) => (
-                  <tr
-                    key={op.id}
-                    className="border-b border-[#EDE9E3] last:border-0 transition-colors duration-100 hover:bg-[#F5F3EF]"
-                  >
-                    <td className="px-4 py-3 text-sm" style={{ color: '#5C5550' }}>
-                      {new Date(op.date).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="px-4 py-3 text-sm" style={{ color: '#5C5550' }}>
-                      {OPERATION_TYPES[op.operation_type] || op.operation_type}
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-sm font-medium" style={{ color: '#1A1714' }}>{op.lot_number || '—'}</p>
-                      {op.lot_name && (
-                        <p className="text-xs mt-0.5" style={{ color: '#5C5550' }}>{op.lot_name}</p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm max-w-xs truncate" style={{ color: '#5C5550' }}>
-                      {op.purpose}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={op.status} />
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i}>
+                      <td colSpan={5} className="px-4 py-3">
+                        <div className="h-4 w-full bg-gray-100 rounded animate-pulse" />
+                      </td>
+                    </tr>
+                  ))
+                ) : operations.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-12 text-sm" style={{ color: '#9B9590' }}>
+                      <Beaker size={32} className="mx-auto mb-2 opacity-30" />
+                      Aucune opération
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  operations.map((op: any) => (
+                    <tr
+                      key={op.id}
+                      className="border-b border-[#EDE9E3] last:border-0 transition-colors duration-100 hover:bg-[#F5F3EF]"
+                    >
+                      <td className="px-4 py-3 text-sm" style={{ color: '#5C5550' }}>
+                        {new Date(op.date).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-4 py-3 text-sm" style={{ color: '#5C5550' }}>
+                        {OPERATION_TYPES[op.operation_type] || op.operation_type}
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-sm font-medium" style={{ color: '#1A1714' }}>{op.lot_number || '—'}</p>
+                        {op.lot_name && (
+                          <p className="text-xs mt-0.5" style={{ color: '#5C5550' }}>{op.lot_name}</p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm max-w-xs truncate" style={{ color: '#5C5550' }}>
+                        {op.purpose}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={op.status} />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Mobile Card View (visible only on mobile, hidden md+) */}
+        <div className="md:hidden space-y-3">
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-xl border border-[#E8E4DE] p-4 animate-pulse"
+                style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}
+              >
+                <div className="h-4 w-1/2 bg-gray-100 rounded mb-2" />
+                <div className="h-3 w-3/4 bg-gray-100 rounded mb-2" />
+                <div className="h-3 w-1/3 bg-gray-100 rounded" />
+              </div>
+            ))
+          ) : operations.length === 0 ? (
+            <div
+              className="bg-white rounded-xl border border-[#E8E4DE] p-8 text-center"
+              style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}
+            >
+              <Beaker size={32} className="mx-auto mb-2 opacity-30" style={{ color: '#9B9590' }} />
+              <p className="text-sm" style={{ color: '#9B9590' }}>Aucune opération</p>
+            </div>
+          ) : (
+            operations.map((op: any) => (
+              <div
+                key={op.id}
+                className="bg-white rounded-xl border border-[#E8E4DE] p-4"
+                style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}
+              >
+                {/* Card top row: operation type + status badge */}
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <p className="text-sm font-semibold leading-snug" style={{ color: '#1A1714' }}>
+                    {OPERATION_TYPES[op.operation_type] || op.operation_type}
+                  </p>
+                  <StatusBadge status={op.status} />
+                </div>
+
+                {/* Date */}
+                <p className="text-xs mb-1" style={{ color: '#9B9590' }}>
+                  {new Date(op.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                </p>
+
+                {/* Lot number */}
+                {op.lot_number && (
+                  <p className="text-xs mb-1" style={{ color: '#5C5550' }}>
+                    <span className="font-medium" style={{ color: '#1A1714' }}>Lot :</span>{' '}
+                    {op.lot_number}
+                    {op.lot_name ? ` — ${op.lot_name}` : ''}
+                  </p>
+                )}
+
+                {/* Purpose (truncated) */}
+                {op.purpose && (
+                  <p
+                    className="text-xs mt-2 truncate"
+                    style={{ color: '#5C5550' }}
+                    title={op.purpose}
+                  >
+                    <span className="font-medium" style={{ color: '#1A1714' }}>Objectif :</span>{' '}
+                    {op.purpose}
+                  </p>
+                )}
+              </div>
+            ))
+          )}
         </div>
 
         {/* Create modal */}
@@ -271,8 +340,8 @@ function CreateOperationModal({
             </select>
           </div>
 
-          {/* Lot + Date */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Lot + Date — stacked on mobile, side-by-side on sm+ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: '#5C5550' }}>Lot</label>
               <select

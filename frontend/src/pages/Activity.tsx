@@ -89,7 +89,7 @@ export default function ActivityPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F3EF]">
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6">
 
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -116,7 +116,7 @@ export default function ActivityPage() {
         </div>
 
         {/* Filter tabs */}
-        <div className="flex items-center gap-1 bg-white border border-[#E8E4DE] rounded-lg p-1 shadow-sm w-fit">
+        <div className="flex items-center gap-1 bg-white border border-[#E8E4DE] rounded-lg p-1 shadow-sm overflow-x-auto">
           {([
             { key: 'all', label: 'Tout', count: allEvents.length },
             { key: 'movement', label: 'Mouvements', count: allEvents.filter(e => e.event_type === 'movement').length },
@@ -173,7 +173,7 @@ export default function ActivityPage() {
               {dayKeys.map((day, dayIndex) => (
                 <div key={day}>
                   {/* Day separator */}
-                  <div className="flex items-center gap-3 px-6 py-3 bg-[#F9F8F6] border-b border-[#E8E4DE]">
+                  <div className="flex items-center gap-3 px-4 sm:px-6 py-3 bg-[#F9F8F6] border-b border-[#E8E4DE]">
                     <div className="h-px flex-1 bg-[#E8E4DE]" />
                     <span className="text-xs font-semibold text-[#5C5550] capitalize whitespace-nowrap">
                       {day}
@@ -189,7 +189,7 @@ export default function ActivityPage() {
                       return (
                         <div
                           key={i}
-                          className="flex items-start gap-4 px-6 py-4 hover:bg-[#F9F8F6] transition-colors duration-100"
+                          className="flex items-start gap-3 sm:gap-4 px-4 sm:px-6 py-4 hover:bg-[#F9F8F6] transition-colors duration-100"
                         >
                           {/* Avatar */}
                           <div
@@ -240,7 +240,7 @@ export default function ActivityPage() {
               ))}
 
               {/* Footer */}
-              <div className="px-6 py-4 bg-[#F9F8F6] border-t border-[#E8E4DE] text-center">
+              <div className="px-4 sm:px-6 py-4 bg-[#F9F8F6] border-t border-[#E8E4DE] text-center">
                 <p className="text-xs text-[#9B9590]">
                   Affichage des {filtered.length} dernière{filtered.length !== 1 ? 's' : ''} activité{filtered.length !== 1 ? 's' : ''} · Actualisation automatique toutes les 15 sec
                 </p>

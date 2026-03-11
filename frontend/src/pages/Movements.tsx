@@ -60,7 +60,7 @@ export default function Movements() {
 
   return (
     <div className="min-h-screen bg-[#F5F3EF]">
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6">
 
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -78,7 +78,7 @@ export default function Movements() {
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white shadow-sm transition-all duration-200"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white shadow-sm transition-all duration-200 min-h-[44px]"
             style={{ backgroundColor: '#8B1A2F' }}
             onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#6F1526')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#8B1A2F')}
@@ -94,7 +94,7 @@ export default function Movements() {
             {stats.movement_types.slice(0, 4).map((mt: any) => {
               const colors = MOVEMENT_COLORS[mt.movement_type] || MOVEMENT_COLORS.default;
               return (
-                <div key={mt.movement_type} className="bg-white border border-[#E8E4DE] rounded-xl p-5 shadow-sm">
+                <div key={mt.movement_type} className="bg-white border border-[#E8E4DE] rounded-xl p-5 shadow-sm min-h-[44px]">
                   <div className="flex items-center gap-2 mb-2">
                     <div
                       className="w-2.5 h-2.5 rounded-full"
@@ -119,7 +119,7 @@ export default function Movements() {
           <div className="flex items-center gap-2">
             <Filter size={14} className="text-[#9B9590]" />
             <select
-              className="bg-white border border-[#E8E4DE] rounded-lg px-3 py-2 text-sm text-[#1A1714] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors"
+              className="bg-white border border-[#E8E4DE] rounded-lg px-3 py-2 text-sm text-[#1A1714] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors min-h-[44px]"
               value={filterType}
               onChange={e => setFilterType(e.target.value)}
             >
@@ -130,7 +130,7 @@ export default function Movements() {
             </select>
           </div>
 
-          <div className="ml-auto flex items-center gap-1 bg-white border border-[#E8E4DE] rounded-lg p-1 shadow-sm">
+          <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-1 bg-white border border-[#E8E4DE] rounded-lg p-1 shadow-sm">
             <button
               onClick={() => setViewMode('table')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -158,7 +158,9 @@ export default function Movements() {
 
         {/* Table View */}
         {viewMode === 'table' && (
-          <div className="bg-white border border-[#E8E4DE] rounded-xl shadow-sm overflow-hidden">
+          <>
+          {/* Desktop table — hidden on mobile */}
+          <div className="hidden md:block bg-white border border-[#E8E4DE] rounded-xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
             <table className="w-full min-w-[600px]">
               <thead>
@@ -244,6 +246,53 @@ export default function Movements() {
             </table>
             </div>
           </div>
+
+          {/* Mobile card view — visible only on mobile */}
+          <div className="md:hidden space-y-3">
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-xl border border-[#E8E4DE] p-4 animate-pulse" style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.06)' }}>
+                  <div className="h-4 w-1/2 bg-[#F0EDE8] rounded mb-2" />
+                  <div className="h-3 w-3/4 bg-[#F0EDE8] rounded" />
+                </div>
+              ))
+            ) : movements.length === 0 ? (
+              <div className="bg-white rounded-xl border border-[#E8E4DE] p-8 text-center" style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.06)' }}>
+                <ArrowLeftRight size={28} className="mx-auto mb-2 opacity-30 text-[#9B9590]" />
+                <p className="text-sm text-[#9B9590]">Aucun mouvement enregistré</p>
+              </div>
+            ) : (
+              movements.map((m: any) => (
+                <div key={m.id} className="bg-white rounded-xl border border-[#E8E4DE] p-4" style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.06)' }}>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <MovementBadge type={m.movement_type} />
+                    <span className="text-xs text-[#9B9590] shrink-0">
+                      {new Date(m.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    {m.lot_number && (
+                      <span className="text-sm font-semibold text-[#1A1714]">{m.lot_number}</span>
+                    )}
+                    <span className="text-sm font-bold text-[#8B1A2F]">
+                      {Number(m.volume_liters).toLocaleString('fr')} L
+                    </span>
+                  </div>
+                  {(m.from_container_code || m.to_container_code) && (
+                    <p className="text-xs text-[#5C5550] mb-1">
+                      {m.from_container_code && <span className="font-medium text-[#1A1714]">{m.from_container_code}</span>}
+                      {m.from_container_code && m.to_container_code && <span className="mx-1 text-[#9B9590]">→</span>}
+                      {m.to_container_code && <span className="font-medium text-[#1A1714]">{m.to_container_code}</span>}
+                    </p>
+                  )}
+                  {m.reason && (
+                    <p className="text-xs text-[#9B9590] truncate">{m.reason}</p>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+          </>
         )}
 
         {/* Timeline View */}
@@ -369,23 +418,23 @@ function CreateMovementModal({ onClose, onCreated }: { onClose: () => void; onCr
     }
   };
 
-  const inputClass = "w-full bg-white border border-[#E8E4DE] rounded-lg px-3 py-2 text-sm text-[#1A1714] placeholder-[#9B9590] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors";
+  const inputClass = "w-full bg-white border border-[#E8E4DE] rounded-lg px-3 py-2 text-sm text-[#1A1714] placeholder-[#9B9590] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors min-h-[44px]";
   const labelClass = "block text-sm font-medium text-[#5C5550] mb-1";
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl border border-[#E8E4DE] shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8E4DE]">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-xl border border-[#E8E4DE] shadow-xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#E8E4DE]">
           <h2 className="text-lg font-semibold text-[#1A1714]">Enregistrer un mouvement</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#9B9590] hover:text-[#5C5550] hover:bg-[#F0EDE8] transition-colors"
+            className="p-2 rounded-lg text-[#9B9590] hover:text-[#5C5550] hover:bg-[#F0EDE8] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             <X size={16} />
           </button>
         </div>
 
-        <div className="px-6 py-5">
+        <div className="px-4 sm:px-6 py-5">
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
               {error}
@@ -420,7 +469,7 @@ function CreateMovementModal({ onClose, onCreated }: { onClose: () => void; onCr
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className={labelClass}>De (contenant)</label>
                 <select
@@ -472,18 +521,18 @@ function CreateMovementModal({ onClose, onCreated }: { onClose: () => void; onCr
               />
             </div>
 
-            <div className="flex gap-3 justify-end pt-2">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end pt-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-[#5C5550] bg-white border border-[#E8E4DE] hover:bg-[#F9F8F6] shadow-sm transition-all duration-200"
+                className="w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium text-[#5C5550] bg-white border border-[#E8E4DE] hover:bg-[#F9F8F6] shadow-sm transition-all duration-200 min-h-[44px]"
               >
                 Annuler
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-white shadow-sm transition-all duration-200 disabled:opacity-60"
+                className="w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium text-white shadow-sm transition-all duration-200 disabled:opacity-60 min-h-[44px]"
                 style={{ backgroundColor: '#8B1A2F' }}
                 onMouseEnter={e => !loading && (e.currentTarget.style.backgroundColor = '#6F1526')}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#8B1A2F')}

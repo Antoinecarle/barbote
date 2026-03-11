@@ -14,26 +14,44 @@ export default function Analyses() {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-fade-in px-4 sm:px-6">
+      <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#1A1714] flex items-center gap-2" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>
-            <FlaskConical size={24} className="text-[#8B1A2F]" />
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1A1714] flex items-center gap-2" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>
+            <FlaskConical size={22} className="text-[#8B1A2F]" />
             Analyses
           </h1>
           <p className="text-[#5C5550] text-sm mt-1">{analyses.length} analyses enregistrées</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => setShowCalculator(true)} className="btn-secondary">
-            <Calculator size={16} /> Simuler assemblage
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setShowCalculator(true)}
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-sm font-medium bg-white shadow-sm transition-colors"
+            style={{ color: '#5C5550', border: '1px solid #E8E4DE' }}
+            onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F9F8F6'; }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#ffffff'; }}
+          >
+            <Calculator size={15} />
+            <span className="hidden sm:inline">Simuler assemblage</span>
+            <span className="sm:hidden">Simuler</span>
           </button>
-          <button onClick={() => setShowCreate(true)} className="btn-primary">
-            <Plus size={16} /> Saisir analyse
+          <button
+            onClick={() => setShowCreate(true)}
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] rounded-lg text-sm font-medium text-white shadow-sm transition-all duration-200"
+            style={{ backgroundColor: '#8B1A2F' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#6F1526')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#8B1A2F')}
+          >
+            <Plus size={15} />
+            <span className="hidden sm:inline">Saisir analyse</span>
+            <span className="sm:hidden">Analyser</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white border border-[#E8E4DE] rounded-xl overflow-hidden overflow-x-auto" style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}>
+      {/* Desktop table — hidden on mobile */}
+      <div className="hidden md:block bg-white border border-[#E8E4DE] rounded-xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}>
+      <div className="overflow-x-auto">
         <table className="w-full min-w-max">
           <thead>
             <tr className="bg-[#FDFCFA] border-b border-[#E8E4DE]">
@@ -75,6 +93,76 @@ export default function Analyses() {
             ))}
           </tbody>
         </table>
+      </div>
+      </div>
+
+      {/* Mobile card view — hidden on md+ */}
+      <div className="md:hidden space-y-3">
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-xl border border-[#E8E4DE] p-4 animate-pulse" style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.06)' }}>
+              <div className="h-4 w-1/2 bg-[#F0EDE8] rounded mb-2" />
+              <div className="h-3 w-3/4 bg-[#F0EDE8] rounded mb-2" />
+              <div className="h-3 w-1/3 bg-[#F0EDE8] rounded" />
+            </div>
+          ))
+        ) : analyses.length === 0 ? (
+          <div className="bg-white rounded-xl border border-[#E8E4DE] p-8 text-center" style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.06)' }}>
+            <FlaskConical size={28} className="mx-auto mb-2 opacity-30 text-[#9B9590]" />
+            <p className="text-sm text-[#9B9590]">Aucune analyse</p>
+          </div>
+        ) : analyses.map((a: any) => (
+          <div key={a.id} className="bg-white rounded-xl border border-[#E8E4DE] p-4" style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.06)' }}>
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#1A1714] truncate">{a.lot_number}</p>
+                {a.lot_name && <p className="text-xs text-[#5C5550] truncate">{a.lot_name}</p>}
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-xs text-[#9B9590]">{new Date(a.analysis_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                <span className="text-xs capitalize text-[#5C5550]">{a.analysis_type}</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {a.alcohol_percent != null && (
+                <div className="bg-[#F9F8F6] rounded-lg p-2 text-center border border-[#E8E4DE]">
+                  <p className="text-xs text-[#9B9590] mb-0.5">Alcool</p>
+                  <p className="text-sm font-semibold text-[#1A1714] font-mono">{a.alcohol_percent}%</p>
+                </div>
+              )}
+              {a.ph != null && (
+                <div className="bg-[#F9F8F6] rounded-lg p-2 text-center border border-[#E8E4DE]">
+                  <p className="text-xs text-[#9B9590] mb-0.5">pH</p>
+                  <p className="text-sm font-semibold text-[#1A1714] font-mono">{a.ph}</p>
+                </div>
+              )}
+              {a.free_so2_mgl != null && (
+                <div className="bg-[#F9F8F6] rounded-lg p-2 text-center border border-[#E8E4DE]">
+                  <p className="text-xs text-[#9B9590] mb-0.5">SO₂L</p>
+                  <p className="text-sm font-semibold text-[#1A1714] font-mono">{a.free_so2_mgl}</p>
+                </div>
+              )}
+              {a.total_acidity_gl != null && (
+                <div className="bg-[#F9F8F6] rounded-lg p-2 text-center border border-[#E8E4DE]">
+                  <p className="text-xs text-[#9B9590] mb-0.5">AT g/L</p>
+                  <p className="text-sm font-semibold text-[#1A1714] font-mono">{a.total_acidity_gl}</p>
+                </div>
+              )}
+              {a.total_so2_mgl != null && (
+                <div className="bg-[#F9F8F6] rounded-lg p-2 text-center border border-[#E8E4DE]">
+                  <p className="text-xs text-[#9B9590] mb-0.5">SO₂T</p>
+                  <p className="text-sm font-semibold text-[#1A1714] font-mono">{a.total_so2_mgl}</p>
+                </div>
+              )}
+              {a.residual_sugar_gl != null && (
+                <div className="bg-[#F9F8F6] rounded-lg p-2 text-center border border-[#E8E4DE]">
+                  <p className="text-xs text-[#9B9590] mb-0.5">Sucres</p>
+                  <p className="text-sm font-semibold text-[#1A1714] font-mono">{a.residual_sugar_gl}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
       {showCreate && (
@@ -130,8 +218,8 @@ function CreateAnalysisModal({ onClose, onCreated }: { onClose: () => void; onCr
         </div>
         {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 mb-4 text-sm">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-[#5C5550] mb-1">Lot *</label>
               <select className="w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm text-[#1A1714] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F]" value={form.lot_id} onChange={e => setForm({...form, lot_id: e.target.value})} required>
                 <option value="">Sélectionner</option>
@@ -161,7 +249,7 @@ function CreateAnalysisModal({ onClose, onCreated }: { onClose: () => void; onCr
 
           <div className="border-t border-[#E8E4DE] pt-3">
             <p className="text-xs font-medium text-[#5C5550] uppercase tracking-wide mb-3">Paramètres analytiques</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <Field label="Alcool" name="alcohol_percent" unit="%" />
               <Field label="Acidité totale" name="total_acidity_gl" unit="g/L" />
               <Field label="Acidité volatile" name="volatile_acidity_gl" unit="g/L" />
@@ -276,7 +364,7 @@ function AssemblageCalculator({ onClose }: { onClose: () => void }) {
               <p className="text-sm font-semibold text-[#1A1714]">
                 Résultat prédit — Volume total: {Number(result.total_volume).toLocaleString('fr')} L
               </p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {Object.entries(result.predicted_analysis).filter(([_, v]) => v !== null).map(([k, v]) => {
                   const labels: Record<string, string> = { alcohol_percent: 'Alcool %', total_acidity_gl: 'AT g/L', volatile_acidity_gl: 'AV g/L', ph: 'pH', free_so2_mgl: 'SO₂L', total_so2_mgl: 'SO₂T', malic_acid_gl: 'Malique', lactic_acid_gl: 'Lactique', color_intensity: 'IC', color_hue: 'Nuance' };
                   return (

@@ -54,7 +54,7 @@ export default function Containers() {
 
   return (
     <div className="min-h-screen bg-[#F5F3EF]">
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6">
 
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -87,7 +87,7 @@ export default function Containers() {
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-44 max-w-xs">
+          <div className="relative flex-1 min-w-0" style={{ minWidth: '140px', maxWidth: '320px' }}>
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9B9590' }} />
             <input
               className="w-full pl-9 pr-3 py-2 bg-white rounded-lg text-sm shadow-sm focus:outline-none transition-colors"
@@ -130,7 +130,7 @@ export default function Containers() {
           </select>
 
           <div
-            className="ml-auto flex items-center gap-1 bg-white rounded-lg p-1 shadow-sm"
+            className="flex items-center gap-1 bg-white rounded-lg p-1 shadow-sm shrink-0"
             style={{ border: '1px solid #E8E4DE' }}
           >
             <button
@@ -286,7 +286,8 @@ export default function Containers() {
               boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)',
             }}
           >
-            <table className="w-full">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px]">
               <thead>
                 <tr style={{ backgroundColor: '#F9F8F6', borderBottom: '1px solid #E8E4DE' }}>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: '#9B9590' }}>Contenant</th>
@@ -390,6 +391,7 @@ export default function Containers() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

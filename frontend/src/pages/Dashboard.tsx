@@ -726,6 +726,18 @@ export default function Dashboard() {
             gap: 8px !important;
           }
         }
+
+        /* ── Analytics 2-column grid on large screens ── */
+        .analytics-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 14px;
+        }
+        @media (min-width: 1024px) {
+          .analytics-grid {
+            grid-template-columns: 2fr 1fr;
+          }
+        }
       `}</style>
 
       {/* ══════════════════════════════════════════════════════════════════════
@@ -922,13 +934,7 @@ export default function Dashboard() {
         </h2>
         <div style={{ width: '32px', height: '3px', borderRadius: '2px', background: 'linear-gradient(90deg, #1D4ED8, #16A34A)' }} />
       </div>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr',
-        gap: '14px',
-      }}
-        className="lg:grid-cols-[2fr_1fr]"
-      >
+      <div className="analytics-grid">
         {/* Area chart */}
         <SectionCard title="Volume des mouvements — 14 derniers jours" icon={TrendingUp}>
           {chartData.length > 0 ? (
