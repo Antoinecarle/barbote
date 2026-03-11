@@ -29,17 +29,10 @@ export default function App() {
   const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
-    // If already authenticated and intro not seen yet, show video
-    const hasSeenIntro = sessionStorage.getItem('barbote_intro_seen');
-    if (!hasSeenIntro && isAuthenticated()) {
-      setShowVideo(true);
-    } else {
-      setAppReady(true);
-    }
+    setAppReady(true);
   }, []);
 
   const handleVideoComplete = () => {
-    sessionStorage.setItem('barbote_intro_seen', '1');
     setShowVideo(false);
     setAppReady(true);
     navigate('/');
@@ -47,14 +40,8 @@ export default function App() {
 
   // Called by Login after successful authentication
   const handleLoginSuccess = () => {
-    const hasSeenIntro = sessionStorage.getItem('barbote_intro_seen');
-    if (!hasSeenIntro) {
-      setShowVideo(true);
-      setAppReady(false);
-    } else {
-      setAppReady(true);
-      navigate('/');
-    }
+    setShowVideo(true);
+    setAppReady(false);
   };
 
   return (
