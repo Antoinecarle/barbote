@@ -125,7 +125,7 @@ export default function ActivityPage() {
             <button
               key={tab.key}
               onClick={() => setFilterType(tab.key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+              className={`flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-md text-sm font-medium transition-all duration-200 shrink-0 whitespace-nowrap min-h-[40px] sm:min-h-0 ${
                 filterType === tab.key
                   ? 'bg-[#8B1A2F] text-white shadow-sm'
                   : 'text-[#5C5550] hover:text-[#1A1714] hover:bg-[#F0EDE8]'

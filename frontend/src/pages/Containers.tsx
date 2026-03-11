@@ -81,16 +81,17 @@ export default function Containers() {
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#8B1A2F')}
           >
             <Plus size={16} />
-            Nouveau contenant
+            <span className="hidden sm:inline">Nouveau </span>Contenant
           </button>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-0" style={{ minWidth: '140px', maxWidth: '320px' }}>
+        <div className="space-y-2 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+          {/* Row 1: Search (full width on mobile) */}
+          <div className="relative w-full sm:flex-1 sm:min-w-0" style={{ maxWidth: '320px' }}>
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9B9590' }} />
             <input
-              className="w-full pl-9 pr-3 py-2 bg-white rounded-lg text-sm shadow-sm focus:outline-none transition-colors"
+              className="w-full pl-9 pr-3 py-2.5 sm:py-2 bg-white rounded-lg text-sm shadow-sm focus:outline-none transition-colors"
               style={{
                 border: '1px solid #E8E4DE',
                 color: '#5C5550',
@@ -102,65 +103,70 @@ export default function Containers() {
               onBlur={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.boxShadow = ''; }}
             />
           </div>
-          <select
-            className="bg-white rounded-lg px-3 py-2 text-sm shadow-sm focus:outline-none transition-colors"
-            style={{ border: '1px solid #E8E4DE', color: '#5C5550' }}
-            value={filterStatus}
-            onChange={e => setFilterStatus(e.target.value)}
-            onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
-            onBlur={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.boxShadow = ''; }}
-          >
-            <option value="">Tous les statuts</option>
-            {Object.entries(STATUS_CONFIG).map(([v, { label }]) => (
-              <option key={v} value={v}>{label}</option>
-            ))}
-          </select>
-          <select
-            className="bg-white rounded-lg px-3 py-2 text-sm shadow-sm focus:outline-none transition-colors"
-            style={{ border: '1px solid #E8E4DE', color: '#5C5550' }}
-            value={filterType}
-            onChange={e => setFilterType(e.target.value)}
-            onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
-            onBlur={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.boxShadow = ''; }}
-          >
-            <option value="">Tous les types</option>
-            {Object.entries(CONTAINER_TYPES).map(([v, label]) => (
-              <option key={v} value={v}>{label}</option>
-            ))}
-          </select>
+          {/* Row 2: Selects + view toggle (on mobile) */}
+          <div className="flex items-center gap-2 sm:contents">
+            <select
+              className="flex-1 sm:flex-none bg-white rounded-lg px-3 py-2.5 sm:py-2 text-sm shadow-sm focus:outline-none transition-colors min-h-[44px] sm:min-h-0"
+              style={{ border: '1px solid #E8E4DE', color: '#5C5550' }}
+              value={filterStatus}
+              onChange={e => setFilterStatus(e.target.value)}
+              onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
+              onBlur={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.boxShadow = ''; }}
+            >
+              <option value="">Tous statuts</option>
+              {Object.entries(STATUS_CONFIG).map(([v, { label }]) => (
+                <option key={v} value={v}>{label}</option>
+              ))}
+            </select>
+            <select
+              className="flex-1 sm:flex-none bg-white rounded-lg px-3 py-2.5 sm:py-2 text-sm shadow-sm focus:outline-none transition-colors min-h-[44px] sm:min-h-0"
+              style={{ border: '1px solid #E8E4DE', color: '#5C5550' }}
+              value={filterType}
+              onChange={e => setFilterType(e.target.value)}
+              onFocus={e => { e.currentTarget.style.borderColor = '#8B1A2F'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(139,26,47,0.15)'; }}
+              onBlur={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.boxShadow = ''; }}
+            >
+              <option value="">Tous types</option>
+              {Object.entries(CONTAINER_TYPES).map(([v, label]) => (
+                <option key={v} value={v}>{label}</option>
+              ))}
+            </select>
 
-          <div
-            className="flex items-center gap-1 bg-white rounded-lg p-1 shadow-sm shrink-0"
-            style={{ border: '1px solid #E8E4DE' }}
-          >
-            <button
-              onClick={() => setViewMode('grid')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
-              style={
-                viewMode === 'grid'
-                  ? { backgroundColor: '#8B1A2F', color: '#ffffff' }
-                  : { color: '#9B9590' }
-              }
-              onMouseEnter={e => { if (viewMode !== 'grid') e.currentTarget.style.color = '#5C5550'; }}
-              onMouseLeave={e => { if (viewMode !== 'grid') e.currentTarget.style.color = '#9B9590'; }}
+            <div
+              className="flex items-center gap-1 bg-white rounded-lg p-1 shadow-sm shrink-0"
+              style={{ border: '1px solid #E8E4DE' }}
             >
-              <Grid3X3 size={14} />
-              Grille
-            </button>
-            <button
-              onClick={() => setViewMode('table')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
-              style={
-                viewMode === 'table'
-                  ? { backgroundColor: '#8B1A2F', color: '#ffffff' }
-                  : { color: '#9B9590' }
-              }
-              onMouseEnter={e => { if (viewMode !== 'table') e.currentTarget.style.color = '#5C5550'; }}
-              onMouseLeave={e => { if (viewMode !== 'table') e.currentTarget.style.color = '#9B9590'; }}
-            >
-              <List size={14} />
-              Tableau
-            </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all duration-200 min-h-[36px]"
+                style={
+                  viewMode === 'grid'
+                    ? { backgroundColor: '#8B1A2F', color: '#ffffff' }
+                    : { color: '#9B9590' }
+                }
+                onMouseEnter={e => { if (viewMode !== 'grid') e.currentTarget.style.color = '#5C5550'; }}
+                onMouseLeave={e => { if (viewMode !== 'grid') e.currentTarget.style.color = '#9B9590'; }}
+                title="Vue grille"
+              >
+                <Grid3X3 size={14} />
+                <span className="hidden sm:inline">Grille</span>
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all duration-200 min-h-[36px]"
+                style={
+                  viewMode === 'table'
+                    ? { backgroundColor: '#8B1A2F', color: '#ffffff' }
+                    : { color: '#9B9590' }
+                }
+                onMouseEnter={e => { if (viewMode !== 'table') e.currentTarget.style.color = '#5C5550'; }}
+                onMouseLeave={e => { if (viewMode !== 'table') e.currentTarget.style.color = '#9B9590'; }}
+                title="Vue tableau"
+              >
+                <List size={14} />
+                <span className="hidden sm:inline">Tableau</span>
+              </button>
+            </div>
           </div>
         </div>
 
