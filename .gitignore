@@ -1,0 +1,11 @@
+node_modules/
+.env
+*.log
+dist/
+.DS_Store
+coverage/
+.nyc_output/
+*.pid
+*.seed
+logs/
+tmp/

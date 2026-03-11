@@ -1,0 +1,16 @@
+{
+  "name": "barbote",
+  "version": "1.0.0",
+  "description": "Barbote - Wine Cellar Traceability Platform",
+  "type": "module",
+  "scripts": {
+    "install:all": "cd server && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "migrate": "cd server && node db/migrate.js",
+    "start": "cd server && node index.js",
+    "dev:server": "cd server && node --watch index.js",
+    "dev:frontend": "cd frontend && npm run dev",
+    "setup": "npm run install:all && npm run migrate && npm run build",
+    "test": "echo 'No tests configured yet'"
+  }
+}
