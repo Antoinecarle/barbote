@@ -2,10 +2,16 @@
 nixPkgs = ["nodejs_20"]
 
 [phases.install]
-cmds = ["cd server && npm install --production"]
+cmds = [
+  "npm install --prefix server",
+  "npm install --prefix frontend"
+]
 
 [phases.build]
-cmds = []
+cmds = [
+  "npm run build --prefix frontend",
+  "mkdir -p server/dist && cp -r frontend/dist/. server/dist/"
+]
 
 [start]
 cmd = "node server/index.js"

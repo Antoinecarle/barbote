@@ -7,6 +7,7 @@ import { createServer } from 'http';
 import { Server as SocketIO } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { existsSync } from 'fs';
 import jwt from 'jsonwebtoken';
 
 import authRouter from './routes/auth.js';
@@ -42,14 +43,11 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from frontend dist
+// Serve static files — support both Railway (server/dist) and local (frontend/dist)
 const distPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(distPath));
-
-// Serve video file for loading screen
-app.get('/intro.mp4', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/public/intro.mp4'));
-});
+const distPathAlt = path.join(__dirname, 'dist');
+const actualDistPath = existsSync(path.join(distPathAlt, 'index.html')) ? distPathAlt : distPath;
+app.use(express.static(actualDistPath));
 
 // Monitoring middleware
 app.use(monitoring.middleware());
@@ -107,7 +105,7 @@ app.set('io', io);
 
 // SPA fallback
 app.get('*', (req, res) => {
-  const indexPath = path.join(distPath, 'index.html');
+  const indexPath = path.join(actualDistPath, 'index.html');
   res.sendFile(indexPath, (err) => {
     if (err) res.status(200).send('Barbote - Wine Traceability Platform');
   });
