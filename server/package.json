@@ -6,7 +6,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --passWithNoTests",
+    "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage --passWithNoTests",
+    "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
+    "lint": "eslint . --ext .js --ignore-path .eslintignore"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -23,5 +27,28 @@
     "resend": "^3.2.0",
     "socket.io": "^4.7.4",
     "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": ["**/__tests__/**/*.test.js", "**/*.test.js"],
+    "collectCoverageFrom": [
+      "routes/**/*.js",
+      "services/**/*.js",
+      "middleware/**/*.js",
+      "!**/node_modules/**",
+      "!**/index.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 30,
+        "functions": 40,
+        "lines": 40,
+        "statements": 40
+      }
+    }
   }
 }
