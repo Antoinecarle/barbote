@@ -119,7 +119,7 @@ export default function Layout({ children }: LayoutProps) {
           {!collapsed && (
             <button
               onClick={() => setCollapsed(true)}
-              className="hidden md:flex p-1.5 rounded-md transition-colors duration-200 focus:outline-none"
+              className="hidden md:flex items-center justify-center p-1.5 rounded-md transition-colors duration-200 focus:outline-none min-h-[44px] min-w-[44px]"
               style={{ color: '#9B9590' }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.color = '#5C5550';
@@ -137,7 +137,7 @@ export default function Layout({ children }: LayoutProps) {
           {collapsed && (
             <button
               onClick={() => setCollapsed(false)}
-              className="hidden md:flex p-1.5 rounded-md transition-colors duration-200 focus:outline-none"
+              className="hidden md:flex items-center justify-center p-1.5 rounded-md transition-colors duration-200 focus:outline-none min-h-[44px] min-w-[44px]"
               style={{ color: '#9B9590' }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.color = '#5C5550';
@@ -153,10 +153,10 @@ export default function Layout({ children }: LayoutProps) {
             </button>
           )}
 
-          {/* Mobile close button */}
+          {/* Mobile close button — full 44x44 touch target */}
           <button
             onClick={() => setMobileOpen(false)}
-            className="md:hidden p-1.5 rounded-md transition-colors duration-200 focus:outline-none"
+            className="md:hidden flex items-center justify-center rounded-md transition-colors duration-200 focus:outline-none min-h-[44px] min-w-[44px]"
             style={{ color: '#9B9590' }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLButtonElement).style.color = '#5C5550';
@@ -167,6 +167,7 @@ export default function Layout({ children }: LayoutProps) {
               (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
             }}
             title="Fermer le menu"
+            aria-label="Fermer le menu"
           >
             <X className="h-4 w-4" />
           </button>
@@ -297,16 +298,16 @@ export default function Layout({ children }: LayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         {/* Top Header */}
         <header
           className="h-16 border-b flex items-center px-4 md:px-6 shrink-0 gap-3"
           style={{ backgroundColor: '#FDFCFA', borderColor: '#E8E4DE' }}
         >
-          {/* Mobile hamburger button */}
+          {/* Mobile hamburger button — full 44x44 touch target */}
           <button
             onClick={() => setMobileOpen(true)}
-            className="md:hidden p-2 rounded-md transition-colors duration-200 focus:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="md:hidden flex items-center justify-center rounded-md transition-colors duration-200 focus:outline-none min-h-[44px] min-w-[44px]"
             style={{ color: '#9B9590' }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLButtonElement).style.color = '#5C5550';
@@ -317,23 +318,24 @@ export default function Layout({ children }: LayoutProps) {
               (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
             }}
             title="Ouvrir le menu"
+            aria-label="Ouvrir le menu"
           >
             <Menu className="h-5 w-5" />
           </button>
 
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm" style={{ color: '#9B9590' }}>
-            <span>/</span>
+          <div className="flex items-center gap-2 text-sm min-w-0 overflow-hidden" style={{ color: '#9B9590' }}>
+            <span className="shrink-0">/</span>
             {navItems.find((item) => item.path === location.pathname) && (
-              <span style={{ fontWeight: 500, color: '#1A1714' }}>
+              <span className="truncate" style={{ fontWeight: 500, color: '#1A1714' }}>
                 {navItems.find((item) => item.path === location.pathname)?.label}
               </span>
             )}
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6" style={{ backgroundColor: '#F5F3EF' }}>
+        {/* Page Content — px-4 on mobile, px-6 on md+ */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6" style={{ backgroundColor: '#F5F3EF' }}>
           {children}
         </main>
       </div>

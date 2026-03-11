@@ -71,7 +71,7 @@ interface KpiCardProps {
 function KpiCard({ icon: Icon, label, value, sub, iconBg, iconColor, accentColor }: KpiCardProps) {
   return (
     <div
-      className="bg-white border border-[#E8E4DE] rounded-xl p-6 transition-shadow duration-200 hover:shadow-md cursor-default overflow-hidden relative"
+      className="bg-white border border-[#E8E4DE] rounded-xl p-5 transition-shadow duration-200 hover:shadow-md cursor-default overflow-hidden relative"
       style={{
         boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)'
       }}
@@ -81,7 +81,7 @@ function KpiCard({ icon: Icon, label, value, sub, iconBg, iconColor, accentColor
         className="absolute top-0 left-0 right-0 h-[3px] rounded-t-xl"
         style={{ backgroundColor: accentColor }}
       />
-      <div className="flex items-center justify-between mb-4 mt-1">
+      <div className="flex items-center justify-between mb-3 mt-1">
         <div
           className="w-10 h-10 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: iconBg }}
@@ -91,13 +91,13 @@ function KpiCard({ icon: Icon, label, value, sub, iconBg, iconColor, accentColor
       </div>
       <div>
         <p
-          className="text-3xl font-bold tracking-tight"
+          className="text-2xl sm:text-3xl font-bold tracking-tight"
           style={{ color: '#1A1714', fontFamily: "'Cabinet Grotesk', sans-serif" }}
         >
           {value}
         </p>
         <p className="text-sm font-medium mt-1" style={{ color: '#5C5550' }}>{label}</p>
-        <p className="text-xs mt-0.5" style={{ color: '#9B9590' }}>{sub}</p>
+        <p className="text-xs mt-0.5 truncate" style={{ color: '#9B9590' }}>{sub}</p>
       </div>
     </div>
   );
@@ -106,13 +106,13 @@ function KpiCard({ icon: Icon, label, value, sub, iconBg, iconColor, accentColor
 function SectionCard({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
   return (
     <div
-      className="bg-white border border-[#E8E4DE] rounded-xl p-6 transition-shadow duration-200 hover:shadow-md"
+      className="bg-white border border-[#E8E4DE] rounded-xl p-5 transition-shadow duration-200 hover:shadow-md"
       style={{
         boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)'
       }}
     >
       <h2
-        className="text-sm font-semibold mb-5 flex items-center gap-2"
+        className="text-sm font-semibold mb-4 flex items-center gap-2"
         style={{ color: '#1A1714', fontFamily: "'Cabinet Grotesk', sans-serif" }}
       >
         <Icon size={16} style={{ color: '#8B1A2F' }} />
@@ -205,57 +205,63 @@ export default function Dashboard() {
   }));
 
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div>
-        <h1
-          className="text-2xl font-bold tracking-tight"
-          style={{ color: '#1A1714', fontFamily: "'Cabinet Grotesk', sans-serif" }}
-        >
-          Tableau de bord
-        </h1>
-        <p className="text-sm mt-1" style={{ color: '#9B9590' }}>Vue d'ensemble de votre cave</p>
+    <div className="space-y-5">
+      {/* Page header — flex-wrap so buttons don't overflow on small screens */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1
+            className="text-xl sm:text-2xl font-bold tracking-tight"
+            style={{ color: '#1A1714', fontFamily: "'Cabinet Grotesk', sans-serif" }}
+          >
+            Tableau de bord
+          </h1>
+          <p className="text-sm mt-1" style={{ color: '#9B9590' }}>Vue d'ensemble de votre cave</p>
+        </div>
       </div>
 
-      {/* KPI cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* KPI cards — 1 col mobile, 2 col sm, 4 col xl */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {kpiCards.map(card => (
           <KpiCard key={card.label} {...card} />
         ))}
       </div>
 
-      {/* Charts row */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Bar chart – volume movements */}
+      {/* Charts row — stack on mobile, side-by-side on xl */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        {/* Bar chart – volume movements — scrollable wrapper on mobile */}
         <SectionCard title="Volume des mouvements (30j)" icon={TrendingUp}>
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={chartData} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
-                <XAxis
-                  dataKey="day"
-                  tick={{ fill: '#9B9590', fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: '#9B9590', fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: '#FDFCFA',
-                    border: '1px solid #E8E4DE',
-                    borderRadius: 8,
-                    fontSize: 12,
-                    color: '#1A1714'
-                  }}
-                  labelStyle={{ color: '#5C5550', fontWeight: 600 }}
-                />
-                <Bar dataKey="Entrée" fill="#8B1A2F" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="Sortie" fill="#D97706" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="overflow-x-auto -mx-1">
+              <div className="min-w-[280px]">
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={chartData} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
+                    <XAxis
+                      dataKey="day"
+                      tick={{ fill: '#9B9590', fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: '#9B9590', fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: '#FDFCFA',
+                        border: '1px solid #E8E4DE',
+                        borderRadius: 8,
+                        fontSize: 12,
+                        color: '#1A1714'
+                      }}
+                      labelStyle={{ color: '#5C5550', fontWeight: 600 }}
+                    />
+                    <Bar dataKey="Entrée" fill="#8B1A2F" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="Sortie" fill="#D97706" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           ) : (
             <EmptyState message="Aucune donnée disponible" />
           )}
@@ -297,14 +303,14 @@ export default function Dashboard() {
               <div className="space-y-2 mt-3">
                 {pieData.map(item => (
                   <div key={item.name} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <div
                         className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                         style={{ backgroundColor: item.color }}
                       />
-                      <span style={{ color: '#5C5550' }}>{item.name}</span>
+                      <span className="truncate" style={{ color: '#5C5550' }}>{item.name}</span>
                     </div>
-                    <span className="font-medium" style={{ color: '#1A1714' }}>{item.value.toLocaleString('fr')} L</span>
+                    <span className="font-medium ml-2 flex-shrink-0" style={{ color: '#1A1714' }}>{item.value.toLocaleString('fr')} L</span>
                   </div>
                 ))}
               </div>
@@ -315,8 +321,8 @@ export default function Dashboard() {
         </SectionCard>
       </div>
 
-      {/* Recent activity row */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      {/* Recent activity row — stack on mobile */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
         {/* Recent movements */}
         <SectionCard title="Mouvements récents" icon={ArrowLeftRight}>
           {(!recentActivity?.movements || recentActivity.movements.length === 0) ? (
@@ -324,14 +330,14 @@ export default function Dashboard() {
           ) : (
             <div className="divide-y" style={{ borderColor: '#EDE9E3' }}>
               {recentActivity.movements.slice(0, 6).map((m: any, i: number) => (
-                <div key={i} className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
+                <div key={i} className="flex items-center justify-between py-3 gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div
                       className="w-2 h-2 rounded-full flex-shrink-0"
                       style={{ backgroundColor: '#8B1A2F' }}
                     />
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: '#1A1714' }}>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate" style={{ color: '#1A1714' }}>
                         {MOVEMENT_LABELS[m.movement_type] || m.movement_type}
                         {m.lot_number && (
                           <span className="font-normal" style={{ color: '#9B9590' }}> · {m.lot_number}</span>
@@ -340,7 +346,7 @@ export default function Dashboard() {
                       <p className="text-xs" style={{ color: '#9B9590' }}>{m.operator_name || 'Système'}</p>
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0 ml-4">
+                  <div className="text-right flex-shrink-0">
                     <p className="text-sm font-medium" style={{ color: '#1A1714' }}>
                       {Number(m.volume_liters).toLocaleString('fr')} L
                     </p>
@@ -374,7 +380,7 @@ export default function Dashboard() {
                   : '#1D4ED8';
 
                 return (
-                  <div key={i} className="flex items-center justify-between py-3">
+                  <div key={i} className="flex items-center justify-between py-3 gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className="w-2 h-2 rounded-full flex-shrink-0"
@@ -393,7 +399,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <span
-                      className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ml-4"
+                      className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0"
                       style={{
                         backgroundColor: statusConfig.bg,
                         color: statusConfig.text,

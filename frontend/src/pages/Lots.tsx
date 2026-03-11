@@ -86,13 +86,14 @@ export default function Lots() {
 
   return (
     <div className="min-h-screen bg-[#F5F3EF]">
-      <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+      {/* Responsive horizontal padding: px-4 on mobile, px-6 on sm+ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
 
-        {/* Page header */}
+        {/* Page header — flex-wrap keeps button from overflowing */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1
-              className="text-2xl font-semibold tracking-tight"
+              className="text-xl sm:text-2xl font-semibold tracking-tight"
               style={{ color: '#1A1714', fontFamily: "'Cabinet Grotesk', 'Satoshi', system-ui, sans-serif" }}
             >
               Lots de vin
@@ -101,7 +102,7 @@ export default function Lots() {
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white shadow-sm transition-all duration-200"
+            className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-lg text-sm font-medium text-white shadow-sm transition-all duration-200"
             style={{ backgroundColor: '#8B1A2F' }}
             onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#6F1526')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#8B1A2F')}
@@ -111,7 +112,7 @@ export default function Lots() {
           </button>
         </div>
 
-        {/* Stats row */}
+        {/* Stats row — 2 cols on mobile, 4 cols on sm+ */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: 'Actifs',         value: activeCount,   color: '#15803D', bg: '#F0FDF4', border: '#BBF7D0' },
@@ -130,19 +131,19 @@ export default function Lots() {
               className="bg-white rounded-xl border px-4 py-3"
               style={{ borderColor: stat.border }}
             >
-              <p className="text-xs font-medium" style={{ color: stat.color }}>{stat.label}</p>
-              <p className="text-xl font-bold mt-0.5" style={{ color: stat.color }}>{stat.value}</p>
+              <p className="text-xs font-medium truncate" style={{ color: stat.color }}>{stat.label}</p>
+              <p className="text-lg sm:text-xl font-bold mt-0.5 truncate" style={{ color: stat.color }}>{stat.value}</p>
             </div>
           ))}
         </div>
 
-        {/* Toolbar */}
+        {/* Toolbar — wraps cleanly on mobile; search gets flex-1 with min-w-0 */}
         <div className="flex flex-wrap gap-2">
-          <div className="relative flex-1 min-w-48">
+          <div className="relative flex-1 min-w-0" style={{ minWidth: '160px' }}>
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9B9590' }} />
             <input
               type="text"
-              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-white shadow-sm focus:outline-none transition"
+              className="w-full pl-9 pr-3 py-2 min-h-[40px] text-sm rounded-lg bg-white shadow-sm focus:outline-none transition"
               style={{
                 border: '1px solid #E8E4DE',
                 color: '#1A1714',
@@ -155,7 +156,7 @@ export default function Lots() {
             />
           </div>
           <select
-            className="px-3 py-2 text-sm rounded-lg bg-white shadow-sm focus:outline-none cursor-pointer"
+            className="px-3 py-2 min-h-[40px] text-sm rounded-lg bg-white shadow-sm focus:outline-none cursor-pointer"
             style={{ border: '1px solid #E8E4DE', color: '#5C5550' }}
             value={filterType}
             onChange={handleFilterChange(setFilterType)}
@@ -166,7 +167,7 @@ export default function Lots() {
             ))}
           </select>
           <select
-            className="px-3 py-2 text-sm rounded-lg bg-white shadow-sm focus:outline-none cursor-pointer"
+            className="px-3 py-2 min-h-[40px] text-sm rounded-lg bg-white shadow-sm focus:outline-none cursor-pointer"
             style={{ border: '1px solid #E8E4DE', color: '#5C5550' }}
             value={filterStatus}
             onChange={handleFilterChange(setFilterStatus)}
@@ -178,7 +179,7 @@ export default function Lots() {
           </select>
         </div>
 
-        {/* Table */}
+        {/* Table — overflow-x-auto enables horizontal scroll on mobile; min-w-[640px] keeps layout intact */}
         <div
           className="bg-white rounded-xl overflow-hidden"
           style={{
@@ -187,144 +188,146 @@ export default function Lots() {
           }}
         >
           <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px]">
-            <thead>
-              <tr style={{ backgroundColor: '#F9F8F6', borderBottom: '1px solid #E8E4DE' }}>
-                {['Numéro', 'Nom', 'Type', 'Millésime', 'Volume', 'Statut', 'Contenants', ''].map((col, i) => (
-                  <th
-                    key={col || i}
-                    className={`px-4 py-3 text-xs font-semibold uppercase tracking-wide ${
-                      col === 'Volume' ? 'text-right' : col === '' ? '' : 'text-left'
-                    }`}
-                    style={{ color: '#9B9590' }}
-                  >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody style={{ borderTop: 'none' }}>
-              {isLoading ? (
-                Array.from({ length: 6 }).map((_, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #E8E4DE' }}>
-                    <td colSpan={8} className="px-4 py-3">
-                      <div
-                        className="h-4 rounded animate-pulse w-full"
-                        style={{ backgroundColor: '#F0EDE8' }}
-                      />
-                    </td>
-                  </tr>
-                ))
-              ) : pagedLots.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="text-center py-16">
-                    <Wine size={32} className="mx-auto mb-3" style={{ color: '#D6D0C8' }} />
-                    <p className="text-sm" style={{ color: '#9B9590' }}>Aucun lot trouvé</p>
-                    <p className="text-xs mt-1" style={{ color: '#C4BEB8' }}>Essayez de modifier vos filtres</p>
-                  </td>
-                </tr>
-              ) : (
-                pagedLots.map(lot => {
-                  const typeConf   = TYPE_CONFIG[lot.type]   || TYPE_CONFIG.autre;
-                  const statusConf = STATUS_CONFIG[lot.status] || STATUS_CONFIG.active;
-                  const volumePct  = lot.initial_volume_liters > 0
-                    ? Math.min(100, (lot.current_volume_liters / lot.initial_volume_liters) * 100)
-                    : 0;
-                  return (
-                    <tr
-                      key={lot.id}
-                      className="hover:bg-[#F9F8F6] cursor-pointer transition-colors"
-                      style={{ borderBottom: '1px solid #F0EDE8' }}
-                      onClick={() => navigate(`/lots/${lot.id}`)}
+            <table className="w-full min-w-[640px]">
+              <thead>
+                <tr style={{ backgroundColor: '#F9F8F6', borderBottom: '1px solid #E8E4DE' }}>
+                  {['Numéro', 'Nom', 'Type', 'Millésime', 'Volume', 'Statut', 'Contenants', ''].map((col, i) => (
+                    <th
+                      key={col || i}
+                      className={`px-4 py-3 text-xs font-semibold uppercase tracking-wide ${
+                        col === 'Volume' ? 'text-right' : col === '' ? '' : 'text-left'
+                      }`}
+                      style={{ color: '#9B9590' }}
                     >
-                      <td className="px-4 py-3">
-                        <span className="text-sm font-medium" style={{ color: '#1A1714' }}>{lot.lot_number}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm" style={{ color: '#5C5550' }}>{lot.name}</span>
-                        {lot.appellation && (
-                          <p className="text-xs mt-0.5" style={{ color: '#9B9590' }}>{lot.appellation}</p>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: typeConf.bg, color: typeConf.color }}
-                        >
-                          <span
-                            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: typeConf.color }}
-                          />
-                          {typeConf.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm" style={{ color: '#5C5550' }}>{lot.vintage_year || '—'}</span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <p className="text-sm font-medium" style={{ color: '#1A1714' }}>
-                          {Number(lot.current_volume_liters).toLocaleString('fr')} L
-                        </p>
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody style={{ borderTop: 'none' }}>
+                {isLoading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid #E8E4DE' }}>
+                      <td colSpan={8} className="px-4 py-3">
                         <div
-                          className="w-16 ml-auto rounded-full h-1 mt-1.5"
+                          className="h-4 rounded animate-pulse w-full"
                           style={{ backgroundColor: '#F0EDE8' }}
-                        >
-                          <div
-                            className="h-1 rounded-full transition-all"
-                            style={{ width: `${volumePct}%`, backgroundColor: typeConf.color }}
-                          />
-                        </div>
-                        <p className="text-xs mt-0.5" style={{ color: '#9B9590' }}>{Math.round(volumePct)}%</p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className="inline-flex text-xs font-medium px-2 py-0.5 rounded-full border"
-                          style={{
-                            backgroundColor: statusConf.bg,
-                            color: statusConf.text,
-                            borderColor: statusConf.border,
-                          }}
-                        >
-                          {statusConf.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs" style={{ color: '#9B9590' }}>
-                          {(lot.current_containers as any[]).length > 0
-                            ? (lot.current_containers as any[]).map((c: any) => c.code).join(', ')
-                            : '—'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          className="p-1.5 rounded-md transition-colors"
-                          style={{ color: '#9B9590' }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.color = '#5C5550';
-                            e.currentTarget.style.backgroundColor = '#F0EDE8';
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.color = '#9B9590';
-                            e.currentTarget.style.backgroundColor = '';
-                          }}
-                          onClick={e => { e.stopPropagation(); navigate(`/lots/${lot.id}`); }}
-                          title="Voir le lot"
-                        >
-                          <Eye size={14} />
-                        </button>
+                        />
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                  ))
+                ) : pagedLots.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-16">
+                      <Wine size={32} className="mx-auto mb-3" style={{ color: '#D6D0C8' }} />
+                      <p className="text-sm" style={{ color: '#9B9590' }}>Aucun lot trouvé</p>
+                      <p className="text-xs mt-1" style={{ color: '#C4BEB8' }}>Essayez de modifier vos filtres</p>
+                    </td>
+                  </tr>
+                ) : (
+                  pagedLots.map(lot => {
+                    const typeConf   = TYPE_CONFIG[lot.type]   || TYPE_CONFIG.autre;
+                    const statusConf = STATUS_CONFIG[lot.status] || STATUS_CONFIG.active;
+                    const volumePct  = lot.initial_volume_liters > 0
+                      ? Math.min(100, (lot.current_volume_liters / lot.initial_volume_liters) * 100)
+                      : 0;
+                    return (
+                      <tr
+                        key={lot.id}
+                        className="hover:bg-[#F9F8F6] cursor-pointer transition-colors"
+                        style={{ borderBottom: '1px solid #F0EDE8' }}
+                        onClick={() => navigate(`/lots/${lot.id}`)}
+                      >
+                        <td className="px-4 py-3">
+                          <span className="text-sm font-medium" style={{ color: '#1A1714' }}>{lot.lot_number}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-sm" style={{ color: '#5C5550' }}>{lot.name}</span>
+                          {lot.appellation && (
+                            <p className="text-xs mt-0.5" style={{ color: '#9B9590' }}>{lot.appellation}</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
+                            style={{ backgroundColor: typeConf.bg, color: typeConf.color }}
+                          >
+                            <span
+                              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: typeConf.color }}
+                            />
+                            {typeConf.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-sm" style={{ color: '#5C5550' }}>{lot.vintage_year || '—'}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <p className="text-sm font-medium" style={{ color: '#1A1714' }}>
+                            {Number(lot.current_volume_liters).toLocaleString('fr')} L
+                          </p>
+                          <div
+                            className="w-16 ml-auto rounded-full h-1 mt-1.5"
+                            style={{ backgroundColor: '#F0EDE8' }}
+                          >
+                            <div
+                              className="h-1 rounded-full transition-all"
+                              style={{ width: `${volumePct}%`, backgroundColor: typeConf.color }}
+                            />
+                          </div>
+                          <p className="text-xs mt-0.5" style={{ color: '#9B9590' }}>{Math.round(volumePct)}%</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className="inline-flex text-xs font-medium px-2 py-0.5 rounded-full border"
+                            style={{
+                              backgroundColor: statusConf.bg,
+                              color: statusConf.text,
+                              borderColor: statusConf.border,
+                            }}
+                          >
+                            {statusConf.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs" style={{ color: '#9B9590' }}>
+                            {(lot.current_containers as any[]).length > 0
+                              ? (lot.current_containers as any[]).map((c: any) => c.code).join(', ')
+                              : '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {/* Touch-friendly action button — min 44x44 */}
+                          <button
+                            className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-md transition-colors"
+                            style={{ color: '#9B9590' }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.color = '#5C5550';
+                              e.currentTarget.style.backgroundColor = '#F0EDE8';
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.color = '#9B9590';
+                              e.currentTarget.style.backgroundColor = '';
+                            }}
+                            onClick={e => { e.stopPropagation(); navigate(`/lots/${lot.id}`); }}
+                            title="Voir le lot"
+                            aria-label="Voir le lot"
+                          >
+                            <Eye size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
 
-          {/* Pagination */}
+          {/* Pagination — touch-friendly 44x44 buttons */}
           {!isLoading && filteredLots.length > PAGE_SIZE && (
             <div
-              className="flex items-center justify-between px-4 py-3"
+              className="flex flex-wrap items-center justify-between px-4 py-3 gap-2"
               style={{
                 borderTop: '1px solid #E8E4DE',
                 backgroundColor: '#F9F8F6',
@@ -337,7 +340,7 @@ export default function Lots() {
                 <button
                   disabled={page === 1}
                   onClick={() => setPage(p => p - 1)}
-                  className="p-1.5 rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   style={{ color: '#9B9590' }}
                   onMouseEnter={e => {
                     if (page !== 1) {
@@ -349,6 +352,7 @@ export default function Lots() {
                     e.currentTarget.style.color = '#9B9590';
                     e.currentTarget.style.backgroundColor = '';
                   }}
+                  aria-label="Page précédente"
                 >
                   <ChevronLeft size={14} />
                 </button>
@@ -356,7 +360,7 @@ export default function Lots() {
                   <button
                     key={i}
                     onClick={() => setPage(i + 1)}
-                    className="w-7 h-7 rounded-md text-xs font-medium transition-colors"
+                    className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-md text-xs font-medium transition-colors"
                     style={
                       page === i + 1
                         ? { backgroundColor: '#8B1A2F', color: '#ffffff' }
@@ -368,6 +372,8 @@ export default function Lots() {
                     onMouseLeave={e => {
                       if (page !== i + 1) e.currentTarget.style.backgroundColor = '';
                     }}
+                    aria-label={`Page ${i + 1}`}
+                    aria-current={page === i + 1 ? 'page' : undefined}
                   >
                     {i + 1}
                   </button>
@@ -375,7 +381,7 @@ export default function Lots() {
                 <button
                   disabled={page === totalPages}
                   onClick={() => setPage(p => p + 1)}
-                  className="p-1.5 rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   style={{ color: '#9B9590' }}
                   onMouseEnter={e => {
                     if (page !== totalPages) {
@@ -387,6 +393,7 @@ export default function Lots() {
                     e.currentTarget.style.color = '#9B9590';
                     e.currentTarget.style.backgroundColor = '';
                   }}
+                  aria-label="Page suivante"
                 >
                   <ChevronRight size={14} />
                 </button>
@@ -447,7 +454,7 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
   };
 
   const inputClass =
-    'w-full px-3 py-2 text-sm rounded-lg shadow-sm focus:outline-none transition';
+    'w-full px-3 py-2 min-h-[40px] text-sm rounded-lg shadow-sm focus:outline-none transition';
 
   const labelClass = 'block text-xs font-medium mb-1';
 
@@ -461,9 +468,10 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    /* Full-screen overlay with p-4 safe area — modal fills most of screen on mobile */
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div
-        className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-white w-full sm:max-w-lg sm:rounded-xl rounded-t-xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
         style={{
           border: '1px solid #E8E4DE',
           boxShadow: '0 10px 15px rgba(26,23,20,0.08), 0 4px 6px rgba(26,23,20,0.06)',
@@ -471,7 +479,7 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
       >
         {/* Modal header */}
         <div
-          className="flex items-center justify-between px-6 py-4"
+          className="flex items-center justify-between px-5 py-4 sticky top-0 bg-white z-10"
           style={{ borderBottom: '1px solid #E8E4DE' }}
         >
           <div className="flex items-center gap-2">
@@ -485,16 +493,17 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md transition-colors"
+            className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-md transition-colors"
             style={{ color: '#9B9590' }}
             onMouseEnter={e => { e.currentTarget.style.color = '#5C5550'; e.currentTarget.style.backgroundColor = '#F0EDE8'; }}
             onMouseLeave={e => { e.currentTarget.style.color = '#9B9590'; e.currentTarget.style.backgroundColor = ''; }}
+            aria-label="Fermer"
           >
             <X size={16} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+        <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
           {error && (
             <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2.5 text-sm">
               <X size={14} className="mt-0.5 flex-shrink-0" />
@@ -502,7 +511,8 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* 2-col on sm+, 1-col on mobile */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelClass} style={{ color: '#5C5550' }}>
                 N° de lot <span className="text-red-500">*</span>
@@ -534,7 +544,7 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelClass} style={{ color: '#5C5550' }}>
                 Type <span className="text-red-500">*</span>
@@ -581,7 +591,7 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelClass} style={{ color: '#5C5550' }}>
                 Volume initial (L) <span className="text-red-500">*</span>
@@ -627,15 +637,15 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
             />
           </div>
 
-          {/* Footer actions */}
+          {/* Footer actions — flex-wrap so buttons stack on very narrow screens */}
           <div
-            className="flex gap-3 justify-end pt-2"
+            className="flex flex-wrap gap-3 justify-end pt-2"
             style={{ borderTop: '1px solid #F0EDE8' }}
           >
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-white shadow-sm transition-colors"
+              className="px-4 py-2 min-h-[44px] rounded-lg text-sm font-medium bg-white shadow-sm transition-colors"
               style={{ color: '#5C5550', border: '1px solid #E8E4DE' }}
               onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F9F8F6'; }}
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#ffffff'; }}
@@ -645,7 +655,7 @@ function CreateLotModal({ onClose, onCreated }: { onClose: () => void; onCreated
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-white shadow-sm transition-all duration-200 disabled:opacity-60"
+              className="px-4 py-2 min-h-[44px] rounded-lg text-sm font-medium text-white shadow-sm transition-all duration-200 disabled:opacity-60"
               style={{ backgroundColor: loading ? '#9CA3AF' : '#8B1A2F' }}
               onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = '#6F1526'; }}
               onMouseLeave={e => { if (!loading) e.currentTarget.style.backgroundColor = '#8B1A2F'; }}
