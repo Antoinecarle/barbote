@@ -1,0 +1,255 @@
+name: Barbote CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────────────
+  # Job 1: Frontend — Type check + Build
+  # ────────────────────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend (TypeScript + Build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+        working-directory: ./frontend
+
+      - name: Build production bundle
+        run: npm run build
+        working-directory: ./frontend
+        env:
+          NODE_ENV: production
+
+      - name: Check bundle size (warn if > 2MB)
+        run: |
+          SIZE=$(du -sb dist/assets 2>/dev/null | cut -f1 || echo 0)
+          echo "Bundle assets size: ${SIZE} bytes"
+          if [ "$SIZE" -gt 2097152 ]; then
+            echo "::warning::Bundle size ${SIZE} bytes exceeds 2MB target"
+          fi
+        working-directory: ./frontend
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Job 2: Backend — Lint + Tests
+  # ────────────────────────────────────────────────────────────────────────────
+  backend:
+    name: Backend (Tests + Lint)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: barbote_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./server
+
+      - name: Run database migrations (test DB)
+        run: node db/migrate.js
+        working-directory: ./server
+        env:
+          DATABASE_PUBLIC_URL: postgresql://postgres:testpassword@localhost:5432/barbote_test
+          NODE_ENV: test
+
+      - name: Run unit tests
+        run: npm test -- --coverage --passWithNoTests
+        working-directory: ./server
+        env:
+          DATABASE_PUBLIC_URL: postgresql://postgres:testpassword@localhost:5432/barbote_test
+          JWT_SECRET: test-secret-key
+          NODE_ENV: test
+        continue-on-error: false
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: server/coverage/
+          retention-days: 7
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Job 3: Security Scan
+  # ────────────────────────────────────────────────────────────────────────────
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Audit frontend dependencies
+        run: npm audit --audit-level=high
+        working-directory: ./frontend
+        continue-on-error: true
+
+      - name: Audit server dependencies
+        run: npm audit --audit-level=high
+        working-directory: ./server
+        continue-on-error: true
+
+      - name: Check for secrets in code (basic scan)
+        run: |
+          # Simple grep for common secret patterns
+          if grep -r --include="*.js" --include="*.ts" --include="*.tsx" \
+            -E "(password|secret|api_key|apikey)\s*=\s*['\"][^'\"]{8,}['\"]" \
+            --exclude-dir=node_modules --exclude-dir=dist . 2>/dev/null | \
+            grep -v "test\|mock\|example\|placeholder\|process\.env" | head -5; then
+            echo "::warning::Potential hardcoded secrets found - review above"
+          fi
+          echo "Secret scan complete"
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Job 4: Deploy to Staging (develop branch → Railway auto-deploy)
+  # ────────────────────────────────────────────────────────────────────────────
+  deploy-staging:
+    name: Deploy to Staging (Railway)
+    needs: [frontend, backend, security]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: ${{ vars.STAGING_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+
+      - name: Notify deploy start
+        run: |
+          echo "🚀 Deploying to staging..."
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Triggered by: ${{ github.actor }}"
+
+      # Railway auto-deploys on git push — no manual step needed
+      # If Railway deploy webhook is configured, trigger it here:
+      - name: Trigger Railway staging deploy
+        if: vars.RAILWAY_STAGING_WEBHOOK != ''
+        run: |
+          curl -X POST "${{ vars.RAILWAY_STAGING_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{"commitHash": "${{ github.sha }}", "branch": "develop"}' \
+            || echo "Webhook not configured, Railway auto-deploy will handle this"
+
+      - name: Health check staging
+        if: vars.STAGING_URL != ''
+        run: |
+          sleep 30  # Wait for deployment to complete
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.STAGING_URL }}/api/health" || echo "000")
+          echo "Health check status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "::warning::Staging health check returned $STATUS"
+          fi
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Job 5: Deploy to Production (main branch → Railway auto-deploy)
+  # ────────────────────────────────────────────────────────────────────────────
+  deploy-production:
+    name: Deploy to Production (Railway)
+    needs: [frontend, backend, security]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Production deploy summary
+        run: |
+          echo "## Production Deploy" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Author**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Date**: $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Railway auto-deploys on push to main branch." >> $GITHUB_STEP_SUMMARY
+
+      # Railway auto-deploys on push to main — this job provides visibility only
+      - name: Wait for Railway deployment
+        run: |
+          echo "Railway is deploying... monitoring will check status"
+          sleep 60
+
+      - name: Production health check
+        if: vars.PRODUCTION_URL != ''
+        run: |
+          MAX_RETRIES=5
+          RETRY_DELAY=30
+          for i in $(seq 1 $MAX_RETRIES); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRODUCTION_URL }}/api/health" || echo "000")
+            echo "Attempt $i/$MAX_RETRIES — Health check: $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Production is healthy!"
+              exit 0
+            fi
+            if [ "$i" -lt "$MAX_RETRIES" ]; then
+              sleep $RETRY_DELAY
+            fi
+          done
+          echo "::error::Production health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Production deployment failed! Manual intervention required."
+          echo "## ❌ Deploy Failed" >> $GITHUB_STEP_SUMMARY
+          echo "Production deployment failed. Check Railway logs immediately." >> $GITHUB_STEP_SUMMARY
