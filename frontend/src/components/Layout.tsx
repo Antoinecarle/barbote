@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
+  Menu,
+  X,
 } from 'lucide-react';
 import { logout, getCurrentUser } from '../lib/auth';
 
@@ -45,6 +47,7 @@ const navItems: NavItem[] = [
 
 export default function Layout({ children }: LayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const user = getCurrentUser();
@@ -56,16 +59,26 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 font-sans antialiased text-gray-800">
+      {/* Mobile overlay backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ease-in-out shrink-0 ${
-          collapsed ? 'w-16' : 'w-64'
-        }`}
+        className={`fixed inset-y-0 left-0 z-40 flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ease-in-out shrink-0
+          md:relative md:z-auto md:translate-x-0
+          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${collapsed ? 'md:w-16 w-64' : 'w-64'}
+        `}
       >
         {/* Logo Area */}
         <div
           className={`flex items-center h-16 px-4 border-b border-gray-200 transition-all duration-300 ease-in-out ${
-            collapsed ? 'justify-center' : 'justify-between'
+            collapsed ? 'md:justify-center justify-between' : 'justify-between'
           }`}
         >
           <Link to="/" className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
@@ -81,10 +94,12 @@ export default function Layout({ children }: LayoutProps) {
               </div>
             )}
           </Link>
+
+          {/* Desktop collapse/expand toggle */}
           {!collapsed && (
             <button
               onClick={() => setCollapsed(true)}
-              className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-wine-accent focus:ring-offset-1"
+              className="hidden md:flex p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#8B1A2F] focus:ring-offset-1"
               title="Réduire la barre latérale"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -93,12 +108,21 @@ export default function Layout({ children }: LayoutProps) {
           {collapsed && (
             <button
               onClick={() => setCollapsed(false)}
-              className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-wine-accent focus:ring-offset-1"
+              className="hidden md:flex p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#8B1A2F] focus:ring-offset-1"
               title="Développer la barre latérale"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
           )}
+
+          {/* Mobile close button */}
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="md:hidden p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#8B1A2F] focus:ring-offset-1"
+            title="Fermer le menu"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
         {/* Navigation Links */}
@@ -110,8 +134,9 @@ export default function Layout({ children }: LayoutProps) {
                 key={path}
                 to={path}
                 title={collapsed ? label : undefined}
-                className={`group flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  collapsed ? 'justify-center' : ''
+                onClick={() => setMobileOpen(false)}
+                className={`group flex items-center gap-3 px-3 py-2 min-h-[44px] rounded-md text-sm font-medium transition-colors duration-200 ${
+                  collapsed ? 'md:justify-center' : ''
                 } ${
                   isActive
                     ? 'bg-wine-light text-wine-red'
@@ -129,6 +154,9 @@ export default function Layout({ children }: LayoutProps) {
                 {!collapsed && (
                   <span className="truncate">{label}</span>
                 )}
+                {collapsed && (
+                  <span className="truncate md:hidden">{label}</span>
+                )}
               </Link>
             );
           })}
@@ -140,15 +168,21 @@ export default function Layout({ children }: LayoutProps) {
           {user && (
             <div
               className={`flex items-center gap-3 px-2 py-2 rounded-md mb-1 ${
-                collapsed ? 'justify-center' : ''
+                collapsed ? 'md:justify-center' : ''
               }`}
               title={collapsed ? `${user.name} — ${user.role}` : undefined}
             >
-              <div className="w-7 h-7 rounded-full bg-wine-light border border-wine-border flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-full bg-wine-light border border-[#F3C5CE] flex items-center justify-center shrink-0">
                 <User size={14} className="text-wine-red" />
               </div>
               {!collapsed && (
                 <div className="min-w-0">
+                  <p className="text-xs font-semibold text-gray-900 truncate">{user.name}</p>
+                  <p className="text-xs text-gray-500 capitalize truncate">{user.role}</p>
+                </div>
+              )}
+              {collapsed && (
+                <div className="min-w-0 md:hidden">
                   <p className="text-xs font-semibold text-gray-900 truncate">{user.name}</p>
                   <p className="text-xs text-gray-500 capitalize truncate">{user.role}</p>
                 </div>
@@ -160,8 +194,8 @@ export default function Layout({ children }: LayoutProps) {
           <button
             onClick={handleLogout}
             title={collapsed ? 'Déconnexion' : undefined}
-            className={`group flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 ${
-              collapsed ? 'justify-center' : ''
+            className={`group flex items-center gap-3 w-full px-3 py-2 min-h-[44px] rounded-md text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 ${
+              collapsed ? 'md:justify-center' : ''
             }`}
           >
             <LogOut
@@ -169,6 +203,7 @@ export default function Layout({ children }: LayoutProps) {
               className="shrink-0 text-gray-400 group-hover:text-red-500 transition-colors duration-200"
             />
             {!collapsed && <span>Déconnexion</span>}
+            {collapsed && <span className="md:hidden">Déconnexion</span>}
           </button>
         </div>
       </aside>
@@ -176,7 +211,17 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 shrink-0">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 shrink-0 gap-3">
+          {/* Mobile hamburger button */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#8B1A2F] focus:ring-offset-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            title="Ouvrir le menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+
+          {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <span className="text-gray-400">/</span>
             {navItems.find((item) => item.path === location.pathname) && (
