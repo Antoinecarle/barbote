@@ -9,3 +9,6 @@ coverage/
 *.seed
 logs/
 tmp/
+
+# AI chat uploads
+.uploads/

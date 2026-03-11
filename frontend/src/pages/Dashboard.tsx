@@ -65,15 +65,23 @@ interface KpiCardProps {
   sub: string;
   iconBg: string;
   iconColor: string;
+  accentColor: string;
 }
 
-function KpiCard({ icon: Icon, label, value, sub, iconBg, iconColor }: KpiCardProps) {
+function KpiCard({ icon: Icon, label, value, sub, iconBg, iconColor, accentColor }: KpiCardProps) {
   return (
     <div
-      className="bg-white border border-gray-200 rounded-xl p-6"
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)' }}
+      className="bg-white border border-[#E8E4DE] rounded-xl p-6 transition-shadow duration-200 hover:shadow-md cursor-default overflow-hidden relative"
+      style={{
+        boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)'
+      }}
     >
-      <div className="flex items-center justify-between mb-4">
+      {/* Top colored accent line */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[3px] rounded-t-xl"
+        style={{ backgroundColor: accentColor }}
+      />
+      <div className="flex items-center justify-between mb-4 mt-1">
         <div
           className="w-10 h-10 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: iconBg }}
@@ -82,9 +90,14 @@ function KpiCard({ icon: Icon, label, value, sub, iconBg, iconColor }: KpiCardPr
         </div>
       </div>
       <div>
-        <p className="text-3xl font-bold text-gray-900 tracking-tight">{value}</p>
-        <p className="text-sm font-medium text-gray-700 mt-1">{label}</p>
-        <p className="text-xs text-gray-500 mt-0.5">{sub}</p>
+        <p
+          className="text-3xl font-bold tracking-tight"
+          style={{ color: '#1A1714', fontFamily: "'Cabinet Grotesk', sans-serif" }}
+        >
+          {value}
+        </p>
+        <p className="text-sm font-medium mt-1" style={{ color: '#5C5550' }}>{label}</p>
+        <p className="text-xs mt-0.5" style={{ color: '#9B9590' }}>{sub}</p>
       </div>
     </div>
   );
@@ -93,10 +106,15 @@ function KpiCard({ icon: Icon, label, value, sub, iconBg, iconColor }: KpiCardPr
 function SectionCard({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
   return (
     <div
-      className="bg-white border border-gray-200 rounded-xl p-6"
-      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)' }}
+      className="bg-white border border-[#E8E4DE] rounded-xl p-6 transition-shadow duration-200 hover:shadow-md"
+      style={{
+        boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)'
+      }}
     >
-      <h2 className="text-sm font-semibold text-gray-900 mb-5 flex items-center gap-2">
+      <h2
+        className="text-sm font-semibold mb-5 flex items-center gap-2"
+        style={{ color: '#1A1714', fontFamily: "'Cabinet Grotesk', sans-serif" }}
+      >
         <Icon size={16} style={{ color: '#8B1A2F' }} />
         {title}
       </h2>
@@ -107,7 +125,7 @@ function SectionCard({ title, icon: Icon, children }: { title: string; icon: Rea
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
+    <div className="h-48 flex items-center justify-center text-sm" style={{ color: '#9B9590' }}>
       {message}
     </div>
   );
@@ -142,7 +160,8 @@ export default function Dashboard() {
       value: stats?.lots.active_lots ?? '0',
       sub: `${Math.round(Number(stats?.lots.total_volume ?? 0)).toLocaleString('fr')} L total`,
       iconBg: '#FDF2F4',
-      iconColor: '#8B1A2F'
+      iconColor: '#8B1A2F',
+      accentColor: '#8B1A2F'
     },
     {
       icon: Package,
@@ -150,7 +169,8 @@ export default function Dashboard() {
       value: stats?.containers.in_use ?? '0',
       sub: `${stats?.containers.available ?? '0'} disponibles`,
       iconBg: '#FFFBEB',
-      iconColor: '#D97706'
+      iconColor: '#D97706',
+      accentColor: '#D97706'
     },
     {
       icon: ArrowLeftRight,
@@ -158,7 +178,8 @@ export default function Dashboard() {
       value: stats?.movements_30d.count ?? '0',
       sub: `${Math.round(Number(stats?.movements_30d.total_volume ?? 0)).toLocaleString('fr')} L`,
       iconBg: '#EFF6FF',
-      iconColor: '#1D4ED8'
+      iconColor: '#1D4ED8',
+      accentColor: '#1D4ED8'
     },
     {
       icon: Activity,
@@ -166,7 +187,8 @@ export default function Dashboard() {
       value: stats?.operations.in_progress ?? '0',
       sub: `${stats?.operations.planned ?? '0'} planifiées`,
       iconBg: '#F0FDF4',
-      iconColor: '#16A34A'
+      iconColor: '#16A34A',
+      accentColor: '#16A34A'
     }
   ];
 
@@ -186,8 +208,13 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Tableau de bord</h1>
-        <p className="text-sm text-gray-500 mt-1">Vue d'ensemble de votre cave</p>
+        <h1
+          className="text-2xl font-bold tracking-tight"
+          style={{ color: '#1A1714', fontFamily: "'Cabinet Grotesk', sans-serif" }}
+        >
+          Tableau de bord
+        </h1>
+        <p className="text-sm mt-1" style={{ color: '#9B9590' }}>Vue d'ensemble de votre cave</p>
       </div>
 
       {/* KPI cards */}
@@ -206,24 +233,24 @@ export default function Dashboard() {
               <BarChart data={chartData} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
                 <XAxis
                   dataKey="day"
-                  tick={{ fill: '#6B7280', fontSize: 11 }}
+                  tick={{ fill: '#9B9590', fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: '#6B7280', fontSize: 11 }}
+                  tick={{ fill: '#9B9590', fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: '#FFFFFF',
-                    border: '1px solid #E5E7EB',
+                    background: '#FDFCFA',
+                    border: '1px solid #E8E4DE',
                     borderRadius: 8,
                     fontSize: 12,
-                    color: '#111827'
+                    color: '#1A1714'
                   }}
-                  labelStyle={{ color: '#374151', fontWeight: 600 }}
+                  labelStyle={{ color: '#5C5550', fontWeight: 600 }}
                 />
                 <Bar dataKey="Entrée" fill="#8B1A2F" radius={[3, 3, 0, 0]} />
                 <Bar dataKey="Sortie" fill="#D97706" radius={[3, 3, 0, 0]} />
@@ -249,7 +276,7 @@ export default function Dashboard() {
                     dataKey="value"
                     nameKey="name"
                     strokeWidth={2}
-                    stroke="#FFFFFF"
+                    stroke="#FDFCFA"
                   >
                     {pieData.map((entry, i) => (
                       <Cell key={i} fill={entry.color} />
@@ -257,11 +284,11 @@ export default function Dashboard() {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      background: '#FFFFFF',
-                      border: '1px solid #E5E7EB',
+                      background: '#FDFCFA',
+                      border: '1px solid #E8E4DE',
                       borderRadius: 8,
                       fontSize: 12,
-                      color: '#111827'
+                      color: '#1A1714'
                     }}
                     formatter={(v: number) => [`${v.toLocaleString('fr')} L`]}
                   />
@@ -275,9 +302,9 @@ export default function Dashboard() {
                         className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                         style={{ backgroundColor: item.color }}
                       />
-                      <span className="text-gray-600">{item.name}</span>
+                      <span style={{ color: '#5C5550' }}>{item.name}</span>
                     </div>
-                    <span className="text-gray-900 font-medium">{item.value.toLocaleString('fr')} L</span>
+                    <span className="font-medium" style={{ color: '#1A1714' }}>{item.value.toLocaleString('fr')} L</span>
                   </div>
                 ))}
               </div>
@@ -293,9 +320,9 @@ export default function Dashboard() {
         {/* Recent movements */}
         <SectionCard title="Mouvements récents" icon={ArrowLeftRight}>
           {(!recentActivity?.movements || recentActivity.movements.length === 0) ? (
-            <p className="text-gray-400 text-sm text-center py-6">Aucun mouvement récent</p>
+            <p className="text-sm text-center py-6" style={{ color: '#9B9590' }}>Aucun mouvement récent</p>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y" style={{ borderColor: '#EDE9E3' }}>
               {recentActivity.movements.slice(0, 6).map((m: any, i: number) => (
                 <div key={i} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
@@ -304,20 +331,20 @@ export default function Dashboard() {
                       style={{ backgroundColor: '#8B1A2F' }}
                     />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium" style={{ color: '#1A1714' }}>
                         {MOVEMENT_LABELS[m.movement_type] || m.movement_type}
                         {m.lot_number && (
-                          <span className="text-gray-400 font-normal"> · {m.lot_number}</span>
+                          <span className="font-normal" style={{ color: '#9B9590' }}> · {m.lot_number}</span>
                         )}
                       </p>
-                      <p className="text-xs text-gray-500">{m.operator_name || 'Système'}</p>
+                      <p className="text-xs" style={{ color: '#9B9590' }}>{m.operator_name || 'Système'}</p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0 ml-4">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium" style={{ color: '#1A1714' }}>
                       {Number(m.volume_liters).toLocaleString('fr')} L
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs" style={{ color: '#9B9590' }}>
                       {new Date(m.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </p>
                   </div>
@@ -330,9 +357,9 @@ export default function Dashboard() {
         {/* Recent operations */}
         <SectionCard title="Opérations récentes" icon={Activity}>
           {(!recentActivity?.operations || recentActivity.operations.length === 0) ? (
-            <p className="text-gray-400 text-sm text-center py-6">Aucune opération récente</p>
+            <p className="text-sm text-center py-6" style={{ color: '#9B9590' }}>Aucune opération récente</p>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y" style={{ borderColor: '#EDE9E3' }}>
               {recentActivity.operations.slice(0, 6).map((o: any, i: number) => {
                 const statusConfig = o.status === 'done'
                   ? { bg: '#F0FDF4', text: '#15803D', border: '#BBF7D0', label: 'Terminé' }
@@ -354,14 +381,14 @@ export default function Dashboard() {
                         style={{ backgroundColor: dotColor }}
                       />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 capitalize truncate">
+                        <p className="text-sm font-medium capitalize truncate" style={{ color: '#1A1714' }}>
                           {o.operation_type.replace(/_/g, ' ')}
                           {o.lot_number && (
-                            <span className="text-gray-400 font-normal"> · {o.lot_number}</span>
+                            <span className="font-normal" style={{ color: '#9B9590' }}> · {o.lot_number}</span>
                           )}
                         </p>
                         {o.purpose && (
-                          <p className="text-xs text-gray-500 truncate">{o.purpose}</p>
+                          <p className="text-xs truncate" style={{ color: '#9B9590' }}>{o.purpose}</p>
                         )}
                       </div>
                     </div>

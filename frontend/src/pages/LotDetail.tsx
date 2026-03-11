@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { ArrowLeft, Wine, FlaskConical, ArrowLeftRight, GitBranch, Package } from 'lucide-react';
+import {
+  ArrowLeft, Wine, FlaskConical, ArrowLeftRight, GitBranch, Package,
+} from 'lucide-react';
 
 interface LotDetail {
   id: string;
@@ -11,7 +13,7 @@ interface LotDetail {
   type: string;
   appellation: string;
   vintage_year: number;
-  grape_varieties: Array<{variety: string; percentage: number}>;
+  grape_varieties: Array<{ variety: string; percentage: number }>;
   initial_volume_liters: number;
   current_volume_liters: number;
   status: string;
@@ -19,325 +21,533 @@ interface LotDetail {
   harvest_date?: string;
   notes?: string;
   analysis_matrix: Record<string, number>;
-  parent_lots: Array<{lot_id: string; percentage: number; volume: number}>;
-  parent_lot_details: Array<{id: string; lot_number: string; name: string; type: string; vintage_year: number}>;
+  parent_lots: Array<{ lot_id: string; percentage: number; volume: number }>;
+  parent_lot_details: Array<{ id: string; lot_number: string; name: string; type: string; vintage_year: number }>;
   movements: Array<any>;
   analyses: Array<any>;
   containers: Array<any>;
 }
 
 const ANALYSIS_LABELS: Record<string, { label: string; unit: string; min?: number; max?: number }> = {
-  alcohol_percent: { label: 'Alcool', unit: '%', min: 9, max: 15 },
-  total_acidity_gl: { label: 'Acidité totale', unit: 'g/L', min: 3.5, max: 9 },
-  volatile_acidity_gl: { label: 'Acidité volatile', unit: 'g/L', min: 0, max: 0.6 },
-  ph: { label: 'pH', unit: '', min: 3.0, max: 4.0 },
-  free_so2_mgl: { label: 'SO₂ libre', unit: 'mg/L', min: 15, max: 40 },
-  total_so2_mgl: { label: 'SO₂ total', unit: 'mg/L', min: 0, max: 200 },
-  residual_sugar_gl: { label: 'Sucres résiduels', unit: 'g/L', min: 0, max: 50 },
+  alcohol_percent:      { label: 'Alcool',            unit: '%',    min: 9,   max: 15  },
+  total_acidity_gl:     { label: 'Acidité totale',    unit: 'g/L',  min: 3.5, max: 9   },
+  volatile_acidity_gl:  { label: 'Acidité volatile',  unit: 'g/L',  min: 0,   max: 0.6 },
+  ph:                   { label: 'pH',                unit: '',     min: 3.0, max: 4.0 },
+  free_so2_mgl:         { label: 'SO₂ libre',         unit: 'mg/L', min: 15,  max: 40  },
+  total_so2_mgl:        { label: 'SO₂ total',         unit: 'mg/L', min: 0,   max: 200 },
+  residual_sugar_gl:    { label: 'Sucres résiduels',  unit: 'g/L',  min: 0,   max: 50  },
 };
 
 const MOVEMENT_LABELS: Record<string, string> = {
-  entree: 'Entrée', sortie: 'Sortie', transfert: 'Transfert',
-  assemblage: 'Assemblage', soutirage: 'Soutirage', filtration: 'Filtration',
-  collage: 'Collage', perte: 'Perte', bottling: 'Mise en bouteille',
-  sulfitage: 'Sulfitage', levurage: 'Levurage', malo: 'Fermentation malolactique'
+  entree:      'Entrée',
+  sortie:      'Sortie',
+  transfert:   'Transfert',
+  assemblage:  'Assemblage',
+  soutirage:   'Soutirage',
+  filtration:  'Filtration',
+  collage:     'Collage',
+  perte:       'Perte',
+  bottling:    'Mise en bouteille',
+  sulfitage:   'Sulfitage',
+  levurage:    'Levurage',
+  malo:        'Fermentation malolactique',
 };
 
+const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; border: string }> = {
+  active:   { label: 'Actif',            bg: '#F0FDF4', text: '#15803D', border: '#BBF7D0' },
+  bottled:  { label: 'Mis en bouteille', bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
+  archived: { label: 'Archivé',          bg: '#F3F4F6', text: '#4B5563', border: '#E5E7EB' },
+  sold:     { label: 'Vendu',            bg: '#F3F4F6', text: '#4B5563', border: '#E5E7EB' },
+  spoiled:  { label: 'Perdu',            bg: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
+};
+
+const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  rouge:     { label: 'Rouge',     color: '#8B1A2F', bg: '#FDF2F4' },
+  blanc:     { label: 'Blanc',     color: '#D97706', bg: '#FFFBEB' },
+  rose:      { label: 'Rosé',      color: '#DB2777', bg: '#FDF2F8' },
+  petillant: { label: 'Pétillant', color: '#1D4ED8', bg: '#EFF6FF' },
+  mousseux:  { label: 'Mousseux',  color: '#7C3AED', bg: '#F5F3FF' },
+  muté:      { label: 'Muté',      color: '#C2410C', bg: '#FFF7ED' },
+  autre:     { label: 'Autre',     color: '#6B7280', bg: '#F3F4F6' },
+};
+
+type TabKey = 'overview' | 'analyses' | 'movements' | 'traceability';
+
 export default function LotDetail() {
-  const { id } = useParams<{id: string}>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'overview' | 'analyses' | 'movements' | 'traceability'>('overview');
+  const [tab, setTab] = useState<TabKey>('overview');
 
   const { data: lot, isLoading } = useQuery({
     queryKey: ['lot', id],
     queryFn: () => api<LotDetail>(`/lots/${id}`),
-    enabled: !!id
+    enabled: !!id,
   });
 
   const { data: traceability } = useQuery({
     queryKey: ['lot-traceability', id],
     queryFn: () => api<any>(`/lots/${id}/traceability`),
-    enabled: !!id && tab === 'traceability'
+    enabled: !!id && tab === 'traceability',
   });
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="skeleton h-8 w-48" />
-        <div className="skeleton h-64 w-full" />
+      <div className="px-6 py-6 space-y-4 animate-pulse">
+        <div className="h-8 w-48 bg-[#E8E4DE] rounded-lg" />
+        <div className="h-64 w-full bg-[#E8E4DE] rounded-xl" />
       </div>
     );
   }
 
-  if (!lot) return <div className="text-[#c4a0aa]">Lot non trouvé</div>;
-
-  const volumePercent = Math.min(100, (lot.current_volume_liters / lot.initial_volume_liters) * 100);
-  const latestAnalysis = lot.analyses[0];
-
-  return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/lots')} className="btn-ghost">
-          <ArrowLeft size={16} /> Retour
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-[#f5e6ea] flex items-center gap-2">
-            <Wine size={24} className="text-bordeaux-400" />
-            {lot.lot_number} — {lot.name}
-          </h1>
-          <p className="text-[#c4a0aa] text-sm">{lot.appellation} · {lot.vintage_year} · {lot.type}</p>
+  if (!lot) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="text-center">
+          <Wine size={40} className="mx-auto mb-3 text-[#9B9590]" />
+          <p className="text-sm text-[#5C5550]">Lot non trouvé</p>
         </div>
       </div>
+    );
+  }
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-[#2a1520]">
-        {[
-          { key: 'overview', label: 'Vue d\'ensemble', icon: Wine },
-          { key: 'analyses', label: 'Analyses', icon: FlaskConical },
-          { key: 'movements', label: 'Mouvements', icon: ArrowLeftRight },
-          { key: 'traceability', label: 'Traçabilité', icon: GitBranch },
-        ].map(({ key, label, icon: Icon }) => (
+  const typeConf   = TYPE_CONFIG[lot.type]   || TYPE_CONFIG.autre;
+  const statusConf = STATUS_CONFIG[lot.status] || STATUS_CONFIG.active;
+  const volumePct  = lot.initial_volume_liters > 0
+    ? Math.min(100, (lot.current_volume_liters / lot.initial_volume_liters) * 100)
+    : 0;
+  const latestAnalysis = lot.analyses[0];
+
+  const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
+    { key: 'overview',     label: 'Informations', icon: Wine         },
+    { key: 'analyses',     label: 'Analyses',     icon: FlaskConical },
+    { key: 'movements',    label: 'Mouvements',   icon: ArrowLeftRight },
+    { key: 'traceability', label: 'Traçabilité',  icon: GitBranch    },
+  ];
+
+  return (
+    <div>
+      <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+
+        {/* Header */}
+        <div className="flex items-start gap-4">
           <button
-            key={key}
-            onClick={() => setTab(key as any)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              tab === key
-                ? 'border-bordeaux-500 text-bordeaux-300'
-                : 'border-transparent text-[#c4a0aa] hover:text-[#f5e6ea]'
-            }`}
+            onClick={() => navigate('/lots')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-[#5C5550] bg-white border border-[#E8E4DE] hover:bg-[#F5F3EF] shadow-sm transition-colors mt-0.5"
           >
-            <Icon size={14} />
-            {label}
+            <ArrowLeft size={14} />
+            Retour
           </button>
-        ))}
-      </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1
+                className="text-2xl font-semibold tracking-tight"
+                style={{ fontFamily: "'Cabinet Grotesk', sans-serif", color: '#1A1714' }}
+              >
+                {lot.lot_number}
+                <span className="font-normal mx-2" style={{ color: '#9B9590' }}>—</span>
+                {lot.name}
+              </h1>
+              <span
+                className="inline-flex text-xs font-medium px-2 py-0.5 rounded-full border"
+                style={{ backgroundColor: statusConf.bg, color: statusConf.text, borderColor: statusConf.border }}
+              >
+                {statusConf.label}
+              </span>
+              <span
+                className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: typeConf.bg, color: typeConf.color }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: typeConf.color }} />
+                {typeConf.label}
+              </span>
+            </div>
+            <p className="text-sm text-[#5C5550] mt-1">
+              {[lot.appellation, lot.vintage_year && `Millésime ${lot.vintage_year}`]
+                .filter(Boolean).join(' · ')}
+            </p>
+          </div>
+        </div>
 
-      {/* Overview */}
-      {tab === 'overview' && (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Main info */}
-          <div className="card xl:col-span-2 space-y-4">
-            <h2 className="text-sm font-semibold text-[#f5e6ea]">Informations</h2>
-            <div className="grid grid-cols-2 gap-4">
+        {/* Tabs */}
+        <div className="border-b border-[#E8E4DE] bg-white rounded-t-xl px-2">
+          <nav className="flex -mb-px gap-1">
+            {TABS.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  tab === key
+                    ? 'border-[#8B1A2F] text-[#8B1A2F]'
+                    : 'border-transparent text-[#5C5550] hover:text-[#1A1714] hover:border-[#E8E4DE]'
+                }`}
+              >
+                <Icon size={14} />
+                {label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* ─── OVERVIEW ─── */}
+        {tab === 'overview' && (
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Main info card */}
+            <div
+              className="xl:col-span-2 bg-white rounded-xl border border-[#E8E4DE] p-6 space-y-6"
+              style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}
+            >
+              <h2 className="text-sm font-semibold text-[#1A1714]">Informations générales</h2>
+
+              {/* Volume */}
               <div>
-                <p className="text-xs text-[#c4a0aa]">Volume actuel</p>
-                <p className="text-xl font-bold text-[#f5e6ea]">{Number(lot.current_volume_liters).toLocaleString('fr')} L</p>
-                <div className="w-full bg-[#2a1520] rounded-full h-1.5 mt-1">
-                  <div className="h-1.5 rounded-full bg-bordeaux-500" style={{ width: `${volumePercent}%` }} />
+                <p className="text-xs font-medium text-[#5C5550] uppercase tracking-wide mb-2">Volume</p>
+                <div className="flex items-end gap-3">
+                  <p className="text-3xl font-bold text-[#1A1714]">
+                    {Number(lot.current_volume_liters).toLocaleString('fr')}
+                    <span className="text-lg font-medium text-[#5C5550] ml-1">L</span>
+                  </p>
+                  <p className="text-sm text-[#5C5550] mb-1">
+                    sur {Number(lot.initial_volume_liters).toLocaleString('fr')} L initial
+                  </p>
                 </div>
-                <p className="text-xs text-[#c4a0aa] mt-1">{Math.round(volumePercent)}% du volume initial ({Number(lot.initial_volume_liters).toLocaleString('fr')} L)</p>
+                <div className="w-full bg-[#EDE9E3] rounded-full h-2 mt-2">
+                  <div
+                    className="h-2 rounded-full transition-all"
+                    style={{ width: `${volumePct}%`, backgroundColor: typeConf.color }}
+                  />
+                </div>
+                <p className="text-xs text-[#9B9590] mt-1">{Math.round(volumePct)}% du volume initial</p>
               </div>
-              <div>
-                <p className="text-xs text-[#c4a0aa]">Cépages</p>
-                {lot.grape_varieties?.length > 0 ? (
-                  <div className="space-y-1 mt-1">
+
+              {/* Grape varieties */}
+              {lot.grape_varieties?.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-[#5C5550] uppercase tracking-wide mb-2">Cépages</p>
+                  <div className="space-y-1.5">
                     {lot.grape_varieties.map((g, i) => (
-                      <div key={i} className="flex justify-between text-sm">
-                        <span className="text-[#f5e6ea]">{g.variety}</span>
-                        <span className="text-[#c4a0aa]">{g.percentage}%</span>
+                      <div key={i} className="flex items-center justify-between">
+                        <span className="text-sm text-[#5C5550]">{g.variety}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 bg-[#EDE9E3] rounded-full h-1.5">
+                            <div
+                              className="h-1.5 rounded-full"
+                              style={{ width: `${g.percentage}%`, backgroundColor: typeConf.color }}
+                            />
+                          </div>
+                          <span className="text-xs font-medium text-[#5C5550] w-8 text-right">{g.percentage}%</span>
+                        </div>
                       </div>
                     ))}
                   </div>
-                ) : <p className="text-sm text-[#c4a0aa]">Non défini</p>}
-              </div>
-            </div>
-
-            {/* Current containers */}
-            <div>
-              <h3 className="text-xs text-[#c4a0aa] mb-2 flex items-center gap-1"><Package size={12} /> Contenants actuels</h3>
-              {lot.containers.filter(c => c.is_current).length > 0 ? (
-                <div className="grid grid-cols-2 gap-2">
-                  {lot.containers.filter(c => c.is_current).map((c: any) => (
-                    <div key={c.container_id || c.id} className="bg-[#12090c] border border-[#2a1520] rounded-lg p-3">
-                      <p className="text-sm font-medium text-[#f5e6ea]">{c.code}</p>
-                      <p className="text-xs text-[#c4a0aa]">{c.name}</p>
-                      <p className="text-xs text-bordeaux-400 mt-1">{Number(c.volume_liters || 0).toLocaleString('fr')} L</p>
-                    </div>
-                  ))}
                 </div>
-              ) : <p className="text-sm text-[#c4a0aa]">Aucun contenant assigné</p>}
-            </div>
+              )}
 
-            {/* Notes */}
-            {lot.notes && (
+              {/* Current containers */}
               <div>
-                <p className="text-xs text-[#c4a0aa] mb-1">Notes</p>
-                <p className="text-sm text-[#f5e6ea] bg-[#12090c] rounded-lg p-3">{lot.notes}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Analysis summary */}
-          <div className="card space-y-3">
-            <h2 className="text-sm font-semibold text-[#f5e6ea]">Dernière analyse</h2>
-            {latestAnalysis ? (
-              <>
-                <p className="text-xs text-[#c4a0aa]">
-                  {new Date(latestAnalysis.analysis_date).toLocaleDateString('fr-FR', {
-                    day: 'numeric', month: 'long', year: 'numeric'
-                  })}
-                  {latestAnalysis.lab_name && ` · ${latestAnalysis.lab_name}`}
+                <p className="text-xs font-medium text-[#5C5550] uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <Package size={11} />
+                  Contenants actuels
                 </p>
-                <div className="space-y-2.5">
-                  {Object.entries(ANALYSIS_LABELS).map(([key, config]) => {
-                    const val = latestAnalysis[key];
-                    if (!val) return null;
-                    return (
-                      <div key={key} className="flex justify-between items-center">
-                        <span className="text-xs text-[#c4a0aa]">{config.label}</span>
-                        <span className="text-sm font-medium text-[#f5e6ea]">
-                          {val} {config.unit}
-                        </span>
+                {lot.containers.filter((c: any) => c.is_current).length > 0 ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {lot.containers.filter((c: any) => c.is_current).map((c: any) => (
+                      <div
+                        key={c.container_id || c.id}
+                        className="border border-[#E8E4DE] rounded-lg p-3 bg-[#FDFCFA]"
+                      >
+                        <p className="text-sm font-medium text-[#1A1714]">{c.code}</p>
+                        <p className="text-xs text-[#5C5550] mt-0.5">{c.name}</p>
+                        <p
+                          className="text-xs font-medium mt-1"
+                          style={{ color: typeConf.color }}
+                        >
+                          {Number(c.volume_liters || 0).toLocaleString('fr')} L
+                        </p>
                       </div>
-                    );
-                  })}
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-[#c4a0aa] text-center py-4">Aucune analyse disponible</p>
-            )}
-
-            {/* Parent lots */}
-            {lot.parent_lot_details?.length > 0 && (
-              <div className="border-t border-[#2a1520] pt-3">
-                <p className="text-xs text-[#c4a0aa] mb-2">Issu de</p>
-                {lot.parent_lot_details.map(p => (
-                  <button
-                    key={p.id}
-                    onClick={() => navigate(`/lots/${p.id}`)}
-                    className="block w-full text-left bg-[#12090c] border border-[#2a1520] hover:border-bordeaux-700 rounded-lg p-2.5 mb-1.5 transition-colors"
-                  >
-                    <p className="text-xs font-medium text-[#f5e6ea]">{p.lot_number}</p>
-                    <p className="text-xs text-[#c4a0aa]">{p.name} · {p.vintage_year}</p>
-                  </button>
-                ))}
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[#9B9590]">Aucun contenant assigné</p>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {/* Analyses */}
-      {tab === 'analyses' && (
-        <div className="space-y-4">
-          <div className="card p-0 overflow-hidden">
+              {/* Notes */}
+              {lot.notes && (
+                <div>
+                  <p className="text-xs font-medium text-[#5C5550] uppercase tracking-wide mb-2">Notes</p>
+                  <p className="text-sm text-[#5C5550] bg-[#FDFCFA] border border-[#E8E4DE] rounded-lg px-4 py-3">
+                    {lot.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Right column */}
+            <div className="space-y-4">
+              {/* Latest analysis card */}
+              <div
+                className="bg-white rounded-xl border border-[#E8E4DE] p-5"
+                style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}
+              >
+                <h2 className="text-sm font-semibold text-[#1A1714] mb-3">Dernière analyse</h2>
+                {latestAnalysis ? (
+                  <>
+                    <p className="text-xs text-[#5C5550] mb-3">
+                      {new Date(latestAnalysis.analysis_date).toLocaleDateString('fr-FR', {
+                        day: 'numeric', month: 'long', year: 'numeric',
+                      })}
+                      {latestAnalysis.lab_name && ` · ${latestAnalysis.lab_name}`}
+                    </p>
+                    <div className="space-y-2">
+                      {Object.entries(ANALYSIS_LABELS).map(([key, config]) => {
+                        const val = latestAnalysis[key];
+                        if (!val) return null;
+                        return (
+                          <div key={key} className="flex justify-between items-center py-1 border-b border-[#EDE9E3] last:border-0">
+                            <span className="text-xs text-[#5C5550]">{config.label}</span>
+                            <span className="text-sm font-medium text-[#1A1714]">
+                              {val} {config.unit}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-6">
+                    <FlaskConical size={24} className="mx-auto mb-2 text-[#9B9590]" />
+                    <p className="text-sm text-[#9B9590]">Aucune analyse disponible</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Parent lots card */}
+              {lot.parent_lot_details?.length > 0 && (
+                <div
+                  className="bg-white rounded-xl border border-[#E8E4DE] p-5"
+                  style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}
+                >
+                  <h2 className="text-sm font-semibold text-[#1A1714] mb-3">Issu de</h2>
+                  <div className="space-y-2">
+                    {lot.parent_lot_details.map(p => {
+                      const pType = TYPE_CONFIG[p.type] || TYPE_CONFIG.autre;
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => navigate(`/lots/${p.id}`)}
+                          className="w-full text-left border border-[#E8E4DE] hover:border-[#E8E4DE] rounded-lg p-3 hover:bg-[#F5F3EF] transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="w-2 h-2 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: pType.color }}
+                            />
+                            <p className="text-xs font-semibold text-[#1A1714]">{p.lot_number}</p>
+                          </div>
+                          <p className="text-xs text-[#5C5550] mt-0.5 ml-4">{p.name} · {p.vintage_year}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ─── ANALYSES ─── */}
+        {tab === 'analyses' && (
+          <div
+            className="bg-white rounded-xl border border-[#E8E4DE] overflow-hidden"
+            style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}
+          >
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#2a1520]">
-                  <th className="text-left px-4 py-3 text-xs text-[#c4a0aa]">Date</th>
-                  <th className="text-left px-4 py-3 text-xs text-[#c4a0aa]">Type</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#c4a0aa]">Alcool</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#c4a0aa]">AT</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#c4a0aa]">AV</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#c4a0aa]">pH</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#c4a0aa]">SO₂L</th>
-                  <th className="text-right px-4 py-3 text-xs text-[#c4a0aa]">SO₂T</th>
+                <tr className="bg-[#FDFCFA] border-b border-[#E8E4DE]">
+                  {['Date', 'Type', 'Alcool', 'Acid. tot.', 'Acid. vol.', 'pH', 'SO₂ L', 'SO₂ T'].map((col, i) => (
+                    <th
+                      key={col}
+                      className={`px-4 py-3 text-xs font-semibold text-[#5C5550] uppercase tracking-wide ${
+                        i >= 2 ? 'text-right' : 'text-left'
+                      }`}
+                    >
+                      {col}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody>
-                {lot.analyses.map((a: any) => (
-                  <tr key={a.id} className="table-row">
-                    <td className="px-4 py-3 text-sm text-[#f5e6ea]">
-                      {new Date(a.analysis_date).toLocaleDateString('fr-FR')}
+              <tbody className="divide-y divide-[#EDE9E3]">
+                {lot.analyses.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-12">
+                      <FlaskConical size={28} className="mx-auto mb-2 text-[#9B9590]" />
+                      <p className="text-sm text-[#9B9590]">Aucune analyse enregistrée</p>
                     </td>
-                    <td className="px-4 py-3 text-sm text-[#c4a0aa] capitalize">{a.analysis_type}</td>
-                    <td className="px-4 py-3 text-right text-sm text-[#f5e6ea]">{a.alcohol_percent ? `${a.alcohol_percent}%` : '—'}</td>
-                    <td className="px-4 py-3 text-right text-sm text-[#f5e6ea]">{a.total_acidity_gl ? `${a.total_acidity_gl}` : '—'}</td>
-                    <td className="px-4 py-3 text-right text-sm text-[#f5e6ea]">{a.volatile_acidity_gl ? `${a.volatile_acidity_gl}` : '—'}</td>
-                    <td className="px-4 py-3 text-right text-sm text-[#f5e6ea]">{a.ph || '—'}</td>
-                    <td className="px-4 py-3 text-right text-sm text-[#f5e6ea]">{a.free_so2_mgl || '—'}</td>
-                    <td className="px-4 py-3 text-right text-sm text-[#f5e6ea]">{a.total_so2_mgl || '—'}</td>
                   </tr>
-                ))}
-                {lot.analyses.length === 0 && (
-                  <tr><td colSpan={8} className="text-center py-8 text-[#c4a0aa] text-sm">Aucune analyse</td></tr>
+                ) : (
+                  lot.analyses.map((a: any) => (
+                    <tr key={a.id} className="hover:bg-[#F5F3EF] transition-colors">
+                      <td className="px-4 py-3 text-sm text-[#1A1714]">
+                        {new Date(a.analysis_date).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-[#5C5550] capitalize">{a.analysis_type}</td>
+                      <td className="px-4 py-3 text-right text-sm text-[#1A1714]">
+                        {a.alcohol_percent ? `${a.alcohol_percent}%` : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm text-[#1A1714]">
+                        {a.total_acidity_gl || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm text-[#1A1714]">
+                        {a.volatile_acidity_gl || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm text-[#1A1714]">{a.ph || '—'}</td>
+                      <td className="px-4 py-3 text-right text-sm text-[#1A1714]">{a.free_so2_mgl || '—'}</td>
+                      <td className="px-4 py-3 text-right text-sm text-[#1A1714]">{a.total_so2_mgl || '—'}</td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Movements */}
-      {tab === 'movements' && (
-        <div className="card p-0 overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#2a1520]">
-                <th className="text-left px-4 py-3 text-xs text-[#c4a0aa]">Date</th>
-                <th className="text-left px-4 py-3 text-xs text-[#c4a0aa]">Type</th>
-                <th className="text-right px-4 py-3 text-xs text-[#c4a0aa]">Volume</th>
-                <th className="text-left px-4 py-3 text-xs text-[#c4a0aa]">Opérateur</th>
-                <th className="text-left px-4 py-3 text-xs text-[#c4a0aa]">Raison</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lot.movements.map((m: any) => (
-                <tr key={m.id} className="table-row">
-                  <td className="px-4 py-3 text-sm text-[#f5e6ea]">{new Date(m.date).toLocaleDateString('fr-FR')}</td>
-                  <td className="px-4 py-3 text-sm text-[#f5e6ea]">{MOVEMENT_LABELS[m.movement_type] || m.movement_type}</td>
-                  <td className="px-4 py-3 text-right text-sm text-[#f5e6ea]">{Number(m.volume_liters).toLocaleString('fr')} L</td>
-                  <td className="px-4 py-3 text-sm text-[#c4a0aa]">{m.operator_name || '—'}</td>
-                  <td className="px-4 py-3 text-sm text-[#c4a0aa] max-w-xs truncate">{m.reason || '—'}</td>
+        {/* ─── MOVEMENTS ─── */}
+        {tab === 'movements' && (
+          <div
+            className="bg-white rounded-xl border border-[#E8E4DE] overflow-hidden"
+            style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}
+          >
+            <table className="w-full">
+              <thead>
+                <tr className="bg-[#FDFCFA] border-b border-[#E8E4DE]">
+                  {['Date', 'Type', 'Volume', 'Opérateur', 'Raison'].map((col, i) => (
+                    <th
+                      key={col}
+                      className={`px-4 py-3 text-xs font-semibold text-[#5C5550] uppercase tracking-wide ${
+                        col === 'Volume' ? 'text-right' : 'text-left'
+                      }`}
+                    >
+                      {col}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-              {lot.movements.length === 0 && (
-                <tr><td colSpan={5} className="text-center py-8 text-[#c4a0aa] text-sm">Aucun mouvement</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody className="divide-y divide-[#EDE9E3]">
+                {lot.movements.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-12">
+                      <ArrowLeftRight size={28} className="mx-auto mb-2 text-[#9B9590]" />
+                      <p className="text-sm text-[#9B9590]">Aucun mouvement enregistré</p>
+                    </td>
+                  </tr>
+                ) : (
+                  lot.movements.map((m: any) => (
+                    <tr key={m.id} className="hover:bg-[#F5F3EF] transition-colors">
+                      <td className="px-4 py-3 text-sm text-[#1A1714]">
+                        {new Date(m.date).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-[#5C5550]">
+                          {MOVEMENT_LABELS[m.movement_type] || m.movement_type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-sm font-medium text-[#1A1714]">
+                          {Number(m.volume_liters).toLocaleString('fr')} L
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-[#5C5550]">{m.operator_name || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-[#5C5550] max-w-xs truncate">{m.reason || '—'}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-      {/* Traceability */}
-      {tab === 'traceability' && (
-        <div className="space-y-4">
-          <div className="card">
-            <h2 className="text-sm font-semibold text-[#f5e6ea] mb-4 flex items-center gap-2">
-              <GitBranch size={16} className="text-bordeaux-400" />
+        {/* ─── TRACEABILITY ─── */}
+        {tab === 'traceability' && (
+          <div
+            className="bg-white rounded-xl border border-[#E8E4DE] p-6"
+            style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}
+          >
+            <h2 className="text-sm font-semibold text-[#1A1714] mb-4 flex items-center gap-2">
+              <GitBranch size={16} style={{ color: '#8B1A2F' }} />
               Arbre de traçabilité
             </h2>
             {traceability ? (
               <TraceabilityTree node={traceability} level={0} navigate={navigate} />
             ) : (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin text-bordeaux-400">⏳</div>
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div
+                    className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin mx-auto mb-3"
+                    style={{ borderColor: '#F3C5CE', borderTopColor: '#8B1A2F' }}
+                  />
+                  <p className="text-sm text-[#9B9590]">Chargement de la traçabilité…</p>
+                </div>
               </div>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
 
-function TraceabilityTree({ node, level, navigate }: { node: any; level: number; navigate: any }) {
+function TraceabilityTree({
+  node, level, navigate,
+}: {
+  node: any;
+  level: number;
+  navigate: (path: string) => void;
+}) {
   if (!node) return null;
 
-  const TYPE_COLORS: Record<string, string> = {
-    rouge: '#be185d', blanc: '#d4a017', rose: '#f9a8d4', autre: '#6b7280'
-  };
+  const typeConf = TYPE_CONFIG[node.type] || TYPE_CONFIG.autre;
 
   return (
-    <div style={{ marginLeft: level * 20 }}>
+    <div style={{ marginLeft: level * 24 }}>
+      {level > 0 && (
+        <div
+          className="w-px h-4 ml-3 mb-1"
+          style={{ backgroundColor: '#E8E4DE' }}
+        />
+      )}
       <div
-        className="flex items-center gap-3 p-3 rounded-lg border border-[#2a1520] hover:border-bordeaux-700 cursor-pointer mb-2 transition-colors"
+        className="flex items-center gap-3 px-4 py-3 rounded-xl border border-[#E8E4DE] hover:border-[#E8E4DE] hover:bg-[#F5F3EF] cursor-pointer mb-2 transition-colors"
         onClick={() => navigate(`/lots/${node.id}`)}
       >
-        <div className="w-3 h-3 rounded-full" style={{ background: TYPE_COLORS[node.type] || '#6b7280' }} />
+        <span
+          className="w-3 h-3 rounded-full flex-shrink-0"
+          style={{ backgroundColor: typeConf.color }}
+        />
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-[#f5e6ea]">{node.lot_number}</span>
-            <span className="text-xs text-[#c4a0aa]">{node.name}</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold text-[#1A1714]">{node.lot_number}</span>
+            <span className="text-sm text-[#5C5550]">{node.name}</span>
+            {node.percentage && (
+              <span
+                className="text-xs px-1.5 py-0.5 rounded font-medium"
+                style={{ backgroundColor: typeConf.bg, color: typeConf.color }}
+              >
+                {node.percentage}%
+              </span>
+            )}
           </div>
-          <p className="text-xs text-[#c4a0aa]">
-            {node.vintage_year} · {Number(node.current_volume_liters || 0).toLocaleString('fr')} L
-            {node.percentage && ` · ${node.percentage}%`}
+          <p className="text-xs text-[#9B9590] mt-0.5">
+            {node.vintage_year && `${node.vintage_year} · `}
+            {Number(node.current_volume_liters || 0).toLocaleString('fr')} L
           </p>
         </div>
         {level === 0 && (
-          <span className="text-xs bg-bordeaux-900/50 text-bordeaux-300 px-2 py-0.5 rounded-full">Lot principal</span>
+          <span
+            className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0"
+            style={{ backgroundColor: '#FDF2F4', color: '#8B1A2F', border: '1px solid #F3C5CE' }}
+          >
+            Lot principal
+          </span>
         )}
       </div>
       {node.origins?.map((origin: any, i: number) => (

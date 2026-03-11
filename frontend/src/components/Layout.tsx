@@ -58,7 +58,10 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 font-sans antialiased text-gray-800">
+    <div
+      className="flex h-screen overflow-hidden antialiased"
+      style={{ backgroundColor: '#F5F3EF', fontFamily: "'Satoshi', 'Inter', sans-serif", color: '#1A1714' }}
+    >
       {/* Mobile overlay backdrop */}
       {mobileOpen && (
         <div
@@ -69,26 +72,43 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ease-in-out shrink-0
+        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r transition-all duration-300 ease-in-out shrink-0
           md:relative md:z-auto md:translate-x-0
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
           ${collapsed ? 'md:w-16 w-64' : 'w-64'}
         `}
+        style={{
+          backgroundColor: '#FDFCFA',
+          borderColor: '#E8E4DE',
+          boxShadow: '2px 0 8px rgba(26,23,20,0.06)',
+        }}
       >
         {/* Logo Area */}
         <div
-          className={`flex items-center h-16 px-4 border-b border-gray-200 transition-all duration-300 ease-in-out ${
+          className={`flex items-center h-16 px-4 border-b transition-all duration-300 ease-in-out ${
             collapsed ? 'md:justify-center justify-between' : 'justify-between'
           }`}
+          style={{ borderColor: '#E8E4DE' }}
         >
-          <Link to="/" className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+          <Link to="/" className="flex items-center gap-2.5 overflow-hidden whitespace-nowrap">
             <span className="text-2xl shrink-0">🍷</span>
             {!collapsed && (
               <div className="overflow-hidden">
-                <span className="block text-lg font-semibold text-gray-900 tracking-tight leading-tight">
+                <span
+                  className="block text-xl tracking-tight leading-tight"
+                  style={{
+                    fontFamily: "'Cabinet Grotesk', 'Satoshi', sans-serif",
+                    fontWeight: 700,
+                    color: '#1A1714',
+                    letterSpacing: '-0.02em',
+                  }}
+                >
                   Barbote
                 </span>
-                <span className="block text-xs text-gray-500 leading-tight">
+                <span
+                  className="block text-xs leading-tight"
+                  style={{ color: '#9B9590', fontWeight: 400 }}
+                >
                   Traçabilité Cuverie
                 </span>
               </div>
@@ -99,7 +119,16 @@ export default function Layout({ children }: LayoutProps) {
           {!collapsed && (
             <button
               onClick={() => setCollapsed(true)}
-              className="hidden md:flex p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#8B1A2F] focus:ring-offset-1"
+              className="hidden md:flex p-1.5 rounded-md transition-colors duration-200 focus:outline-none"
+              style={{ color: '#9B9590' }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = '#5C5550';
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#F0EDE8';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = '#9B9590';
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+              }}
               title="Réduire la barre latérale"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -108,7 +137,16 @@ export default function Layout({ children }: LayoutProps) {
           {collapsed && (
             <button
               onClick={() => setCollapsed(false)}
-              className="hidden md:flex p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#8B1A2F] focus:ring-offset-1"
+              className="hidden md:flex p-1.5 rounded-md transition-colors duration-200 focus:outline-none"
+              style={{ color: '#9B9590' }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = '#5C5550';
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#F0EDE8';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = '#9B9590';
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+              }}
               title="Développer la barre latérale"
             >
               <ChevronRight className="h-4 w-4" />
@@ -118,7 +156,16 @@ export default function Layout({ children }: LayoutProps) {
           {/* Mobile close button */}
           <button
             onClick={() => setMobileOpen(false)}
-            className="md:hidden p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#8B1A2F] focus:ring-offset-1"
+            className="md:hidden p-1.5 rounded-md transition-colors duration-200 focus:outline-none"
+            style={{ color: '#9B9590' }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = '#5C5550';
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#F0EDE8';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = '#9B9590';
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+            }}
             title="Fermer le menu"
           >
             <X className="h-4 w-4" />
@@ -137,19 +184,28 @@ export default function Layout({ children }: LayoutProps) {
                 onClick={() => setMobileOpen(false)}
                 className={`group flex items-center gap-3 px-3 py-2 min-h-[44px] rounded-md text-sm font-medium transition-colors duration-200 ${
                   collapsed ? 'md:justify-center' : ''
-                } ${
-                  isActive
-                    ? 'bg-wine-light text-wine-red'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
+                style={{
+                  backgroundColor: isActive ? '#FDF2F4' : 'transparent',
+                  color: isActive ? '#8B1A2F' : '#5C5550',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    (e.currentTarget as HTMLAnchorElement).style.backgroundColor = '#F0EDE8';
+                    (e.currentTarget as HTMLAnchorElement).style.color = '#1A1714';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent';
+                    (e.currentTarget as HTMLAnchorElement).style.color = '#5C5550';
+                  }
+                }}
               >
                 <Icon
                   size={18}
-                  className={`shrink-0 transition-colors duration-200 ${
-                    isActive
-                      ? 'text-wine-red'
-                      : 'text-gray-400 group-hover:text-gray-600'
-                  }`}
+                  className="shrink-0 transition-colors duration-200"
+                  style={{ color: isActive ? '#8B1A2F' : '#9B9590' }}
                 />
                 {!collapsed && (
                   <span className="truncate">{label}</span>
@@ -163,7 +219,7 @@ export default function Layout({ children }: LayoutProps) {
         </nav>
 
         {/* User Info & Logout */}
-        <div className="border-t border-gray-200 p-3 space-y-1">
+        <div className="p-3 space-y-1" style={{ borderTop: '1px solid #E8E4DE' }}>
           {/* User profile */}
           {user && (
             <div
@@ -172,19 +228,42 @@ export default function Layout({ children }: LayoutProps) {
               }`}
               title={collapsed ? `${user.name} — ${user.role}` : undefined}
             >
-              <div className="w-7 h-7 rounded-full bg-wine-light border border-[#F3C5CE] flex items-center justify-center shrink-0">
-                <User size={14} className="text-wine-red" />
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                style={{ backgroundColor: '#FDF2F4', border: '1px solid #F3C5CE' }}
+              >
+                <User size={14} style={{ color: '#8B1A2F' }} />
               </div>
               {!collapsed && (
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-gray-900 truncate">{user.name}</p>
-                  <p className="text-xs text-gray-500 capitalize truncate">{user.role}</p>
+                  <p
+                    className="text-xs truncate"
+                    style={{ fontWeight: 600, color: '#1A1714' }}
+                  >
+                    {user.name}
+                  </p>
+                  <p
+                    className="text-xs capitalize truncate"
+                    style={{ color: '#9B9590' }}
+                  >
+                    {user.role}
+                  </p>
                 </div>
               )}
               {collapsed && (
                 <div className="min-w-0 md:hidden">
-                  <p className="text-xs font-semibold text-gray-900 truncate">{user.name}</p>
-                  <p className="text-xs text-gray-500 capitalize truncate">{user.role}</p>
+                  <p
+                    className="text-xs truncate"
+                    style={{ fontWeight: 600, color: '#1A1714' }}
+                  >
+                    {user.name}
+                  </p>
+                  <p
+                    className="text-xs capitalize truncate"
+                    style={{ color: '#9B9590' }}
+                  >
+                    {user.role}
+                  </p>
                 </div>
               )}
             </div>
@@ -194,13 +273,22 @@ export default function Layout({ children }: LayoutProps) {
           <button
             onClick={handleLogout}
             title={collapsed ? 'Déconnexion' : undefined}
-            className={`group flex items-center gap-3 w-full px-3 py-2 min-h-[44px] rounded-md text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 ${
+            className={`group flex items-center gap-3 w-full px-3 py-2 min-h-[44px] rounded-md text-sm font-medium transition-colors duration-200 ${
               collapsed ? 'md:justify-center' : ''
             }`}
+            style={{ color: '#9B9590' }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#FEF2F2';
+              (e.currentTarget as HTMLButtonElement).style.color = '#DC2626';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+              (e.currentTarget as HTMLButtonElement).style.color = '#9B9590';
+            }}
           >
             <LogOut
               size={18}
-              className="shrink-0 text-gray-400 group-hover:text-red-500 transition-colors duration-200"
+              className="shrink-0 transition-colors duration-200"
             />
             {!collapsed && <span>Déconnexion</span>}
             {collapsed && <span className="md:hidden">Déconnexion</span>}
@@ -211,21 +299,33 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 shrink-0 gap-3">
+        <header
+          className="h-16 border-b flex items-center px-4 md:px-6 shrink-0 gap-3"
+          style={{ backgroundColor: '#FDFCFA', borderColor: '#E8E4DE' }}
+        >
           {/* Mobile hamburger button */}
           <button
             onClick={() => setMobileOpen(true)}
-            className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#8B1A2F] focus:ring-offset-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="md:hidden p-2 rounded-md transition-colors duration-200 focus:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center"
+            style={{ color: '#9B9590' }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = '#5C5550';
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#F0EDE8';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = '#9B9590';
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+            }}
             title="Ouvrir le menu"
           >
             <Menu className="h-5 w-5" />
           </button>
 
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span className="text-gray-400">/</span>
+          <div className="flex items-center gap-2 text-sm" style={{ color: '#9B9590' }}>
+            <span>/</span>
             {navItems.find((item) => item.path === location.pathname) && (
-              <span className="font-medium text-gray-900">
+              <span style={{ fontWeight: 500, color: '#1A1714' }}>
                 {navItems.find((item) => item.path === location.pathname)?.label}
               </span>
             )}
@@ -233,7 +333,7 @@ export default function Layout({ children }: LayoutProps) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
+        <main className="flex-1 overflow-y-auto p-6" style={{ backgroundColor: '#F5F3EF' }}>
           {children}
         </main>
       </div>

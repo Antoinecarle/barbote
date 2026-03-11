@@ -12,17 +12,15 @@
 | **Brand** | Wine Light | `#FDF2F4` | `bg-wine-light` / `bg-[#FDF2F4]` | Active nav item background, light tints |
 | **Brand** | Wine Border | `#F3C5CE` | `border-[#F3C5CE]` | Subtle colored borders on wine-tinted elements |
 | **Brand** | Wine Hover | `#F5E8EB` | `bg-[#F5E8EB]` | Hover state for wine-accented items |
-| **Base** | White | `#FFFFFF` | `bg-white` | Sidebar, header, cards, inputs |
-| **Base** | Page BG | `#F9FAFB` | `bg-gray-50` | Main content area background |
-| **Neutral** | Gray 900 | `#111827` | `text-gray-900` | Headings, primary text |
-| **Neutral** | Gray 700 | `#374151` | `text-gray-700` | Body text, form labels |
-| **Neutral** | Gray 600 | `#4B5563` | `text-gray-600` | Default nav item text |
-| **Neutral** | Gray 500 | `#6B7280` | `text-gray-500` | Secondary/muted text |
-| **Neutral** | Gray 400 | `#9CA3AF` | `text-gray-400` | Disabled text, placeholder icons |
-| **Neutral** | Gray 300 | `#D1D5DB` | `border-gray-300` | Input borders |
-| **Neutral** | Gray 200 | `#E5E7EB` | `border-gray-200` | Sidebar border, card borders, dividers |
-| **Neutral** | Gray 100 | `#F3F4F6` | `bg-gray-100` | Hover backgrounds, table headers |
-| **Neutral** | Gray 50 | `#F9FAFB` | `bg-gray-50` | Page backgrounds, hover on nav items |
+| **Base** | Card White | `#FFFFFF` | `bg-white` | Card surfaces, inputs |
+| **Base** | Sidebar | `#FDFCFA` | `bg-[#FDFCFA]` | Sidebar, header backgrounds |
+| **Base** | Page BG | `#F5F3EF` | `bg-[#F5F3EF]` | Ivory main content area |
+| **Base** | Card Elevated | `#FDFCFA` | `bg-[#FDFCFA]` | Elevated card bg |
+| **Neutral** | Border | `#E8E4DE` | `border-[#E8E4DE]` | Card borders, dividers (warm-tinted) |
+| **Neutral** | Border Subtle | `#EDE9E3` | `border-[#EDE9E3]` | Very subtle separators |
+| **Neutral** | Text Primary | `#1A1714` | `text-[#1A1714]` | Headings, primary text (warm dark) |
+| **Neutral** | Text Secondary | `#5C5550` | `text-[#5C5550]` | Body text, labels |
+| **Neutral** | Text Muted | `#9B9590` | `text-[#9B9590]` | Captions, placeholders |
 | **Feedback** | Success | `#16A34A` | `text-green-700` | Active/success badges |
 | **Feedback** | Warning | `#B45309` | `text-amber-700` | Warning badges |
 | **Feedback** | Error | `#DC2626` | `text-red-600` | Error messages, destructive actions |
@@ -32,7 +30,8 @@
 
 ## 2. Typography
 
-**Font Family**: `Inter` (sans-serif fallback: `system-ui, sans-serif`)
+**Font Family**: `Satoshi` (primary UI), `Cabinet Grotesk` (display headings), `JetBrains Mono` (code/mono)
+(loaded from Fontshare CDN — api.fontshare.com)
 
 | Scale | Size | Weight | Usage |
 |---|---|---|---|
@@ -78,16 +77,16 @@
 
 ---
 
-## 5. Shadows
+## 5. Shadows (multi-layer, warm-tinted)
 
 | Token | Value | Usage |
 |---|---|---|
-| `shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Buttons, inputs |
-| `shadow-card` | `0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)` | Cards |
-| `shadow-card-hover` | `0 4px 6px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.06)` | Hovered cards |
-| `shadow-modal` | `0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.06)` | Modals, dropdowns |
+| `--shadow-sm` | `0 1px 2px rgba(26,23,20,0.06)` | Buttons, inputs |
+| `--shadow-card` | `0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)` | Cards (default) |
+| `--shadow-card-hover` | `0 4px 8px rgba(26,23,20,0.10), 0 12px 24px rgba(26,23,20,0.07)` | Hovered cards |
+| `--shadow-modal` | `0 8px 24px rgba(26,23,20,0.12), 0 24px 48px rgba(26,23,20,0.08)` | Modals, dropdowns |
 
-> Principle: **Subtle shadows, never glowing**. No colored shadows or neon effects.
+> Principle: **Warm-toned multi-layer shadows**. No cold grays, no neon glows. The shadow uses rgba(26,23,20) — the warm dark base color.
 
 ---
 
@@ -227,12 +226,14 @@ Cell text:     text-sm text-gray-700
 
 ---
 
-## 10. Design Principles
+## 10. Design Principles — Ivory Light Mode
 
-1. **White canvas** — All surfaces default to `#FFFFFF` or `#F9FAFB`. No dark backgrounds.
+1. **Ivory canvas** — Page background `#F5F3EF` (warm off-white). Cards on `#FFFFFF` or `#FDFCFA`. Never cold grays.
 2. **Wine-red accent** — `#8B1A2F` is the single brand color. Used sparingly for active states, primary CTAs.
-3. **Subtle borders over shadows** — Prefer `1px solid #E5E7EB` for structure; use shadows only to elevate (cards, modals).
-4. **Professional density** — Compact spacing (`py-2` nav items, `text-sm` body). Data-forward like Linear/Notion.
-5. **No glowing effects** — All interactions use tint/shade changes, never glow, neon, or luminous shadows.
-6. **Consistent 4px grid** — All spacing is a multiple of 4px.
-7. **French UI labels** — All navigation and UI text in French, matching the wine industry locale.
+3. **Warm borders** — `#E8E4DE` instead of cold gray. All borders carry a slight warm/beige tone.
+4. **Multi-layer shadows** — Use `--shadow-card` (two-layer) for cards. Shadows use warm rgba(26,23,20) not cold rgba(0,0,0).
+5. **Satoshi + Cabinet Grotesk typography** — `font-sans` = Satoshi (body/UI), `font-display` = Cabinet Grotesk (page titles, hero numbers).
+6. **Professional density** — Compact spacing (`py-2` nav items, `text-sm` body). Data-forward like Linear/Notion.
+7. **No glowing effects** — All interactions use tint/shade changes on warm palette.
+8. **Consistent 4px grid** — All spacing is a multiple of 4px.
+9. **French UI labels** — All navigation and UI text in French, matching the wine industry locale.
