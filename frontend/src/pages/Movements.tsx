@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowLeftRight, Plus, Filter, Clock, List, X } from 'lucide-react';
 
 const MOVEMENT_LABELS: Record<string, string> = {
@@ -43,6 +46,7 @@ export default function Movements() {
   const [filterType, setFilterType] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'timeline'>('table');
   const queryClient = useQueryClient();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: movements = [], isLoading } = useQuery({
     queryKey: ['movements', filterType],
@@ -58,12 +62,25 @@ export default function Movements() {
     queryFn: () => api<any>('/movements/stats/overview'),
   });
 
+  useGSAP(() => {
+    if (isLoading) return;
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.movements-header', { y: -20, opacity: 0, duration: 0.5 });
+    tl.from('.movements-stat', { y: 24, opacity: 0, stagger: 0.08, duration: 0.5 }, '-=0.2');
+    tl.from('.movements-filters', { y: 16, opacity: 0, duration: 0.4 }, '-=0.2');
+
+    gsap.from('.movements-content', {
+      scrollTrigger: { trigger: '.movements-content', start: 'top 85%', once: true },
+      y: 30, opacity: 0, duration: 0.6,
+    });
+  }, { scope: containerRef, dependencies: [isLoading, viewMode] });
+
   return (
-    <div className="min-h-screen bg-[#F5F3EF]">
+    <div ref={containerRef} className="min-h-screen bg-[#F5F3EF]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6">
 
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="movements-header flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1
               className="text-2xl font-bold text-[#1A1714] tracking-tight flex items-center gap-2"
@@ -94,7 +111,7 @@ export default function Movements() {
             {stats.movement_types.slice(0, 4).map((mt: any) => {
               const colors = MOVEMENT_COLORS[mt.movement_type] || MOVEMENT_COLORS.default;
               return (
-                <div key={mt.movement_type} className="bg-white border border-[#E8E4DE] rounded-xl p-5 shadow-sm min-h-[44px]">
+                <div key={mt.movement_type} className="movements-stat bg-white border border-[#E8E4DE] rounded-xl p-5 shadow-sm min-h-[44px]">
                   <div className="flex items-center gap-2 mb-2">
                     <div
                       className="w-2.5 h-2.5 rounded-full"
@@ -115,7 +132,7 @@ export default function Movements() {
         )}
 
         {/* Filters + View toggle */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="movements-filters flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <Filter size={14} className="text-[#9B9590]" />
             <select
@@ -160,7 +177,7 @@ export default function Movements() {
         {viewMode === 'table' && (
           <>
           {/* Desktop table — hidden on mobile */}
-          <div className="hidden md:block bg-white border border-[#E8E4DE] rounded-xl shadow-sm overflow-hidden">
+          <div className="movements-content hidden md:block bg-white border border-[#E8E4DE] rounded-xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
             <table className="w-full min-w-[600px]">
               <thead>

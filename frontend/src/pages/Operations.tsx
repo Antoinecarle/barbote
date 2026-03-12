@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Beaker, Plus } from 'lucide-react';
 
 const OPERATION_TYPES: Record<string, string> = {
@@ -41,6 +44,7 @@ export default function Operations() {
   const [showCreate, setShowCreate] = useState(false);
   const [filterStatus, setFilterStatus] = useState('');
   const queryClient = useQueryClient();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: operations = [], isLoading } = useQuery({
     queryKey: ['operations', filterStatus],
@@ -51,12 +55,21 @@ export default function Operations() {
     },
   });
 
+  useGSAP(() => {
+    if (isLoading) return;
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.operations-header', { y: -20, opacity: 0, duration: 0.5 });
+    tl.from('.operations-filters', { y: 16, opacity: 0, duration: 0.4 }, '-=0.2');
+    tl.from('.operations-table', { y: 24, opacity: 0, duration: 0.5 }, '-=0.2');
+    tl.from('.operations-card', { y: 24, opacity: 0, stagger: 0.08, duration: 0.5 }, '-=0.3');
+  }, { scope: containerRef, dependencies: [isLoading] });
+
   return (
-    <div>
+    <div ref={containerRef}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6">
 
         {/* Page header */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="operations-header flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1
               className="text-2xl font-bold tracking-tight flex items-center gap-2"
@@ -80,7 +93,7 @@ export default function Operations() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3">
+        <div className="operations-filters flex flex-wrap gap-3">
           <select
             className="rounded-lg border border-[#E8E4DE] px-3 py-2 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors duration-150 hover:bg-[#F5F3EF]"
             style={{ color: '#1A1714' }}
@@ -96,7 +109,7 @@ export default function Operations() {
 
         {/* Desktop Table (hidden on mobile) */}
         <div
-          className="hidden md:block bg-white rounded-xl border border-[#E8E4DE] overflow-hidden"
+          className="operations-table hidden md:block bg-white rounded-xl border border-[#E8E4DE] overflow-hidden"
           style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}
         >
           <div className="overflow-x-auto">
@@ -194,7 +207,7 @@ export default function Operations() {
             operations.map((op: any) => (
               <div
                 key={op.id}
-                className="bg-white rounded-xl border border-[#E8E4DE] p-4"
+                className="operations-card bg-white rounded-xl border border-[#E8E4DE] p-4"
                 style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}
               >
                 {/* Card top row: operation type + status badge */}

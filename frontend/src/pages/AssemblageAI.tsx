@@ -6,6 +6,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   GitMerge, Sparkles, CheckCircle, TrendingUp,
   ChevronRight, X, Info, AlertTriangle, Play, Award,
@@ -847,7 +850,7 @@ function PlanCard({ plan, onClick }: { plan: Plan; onClick: () => void }) {
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="relative bg-white rounded-xl border border-[#E8E4DE] p-5 cursor-pointer overflow-hidden group"
+      className="assemblage-card relative bg-white rounded-xl border border-[#E8E4DE] p-5 cursor-pointer overflow-hidden group"
       style={{
         transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
@@ -1003,6 +1006,7 @@ export default function AssemblageAI() {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const queryClient = useQueryClient();
+  const containerRef = useRef<HTMLDivElement>(null);
   const { data: plans = [], isLoading } = useQuery<Plan[]>({
     queryKey: ['assemblage-plans'],
     queryFn: () => api<Plan[]>('/ai/assemblage'),
@@ -1021,15 +1025,23 @@ export default function AssemblageAI() {
     }
   };
 
+  useGSAP(() => {
+    if (isLoading) return;
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.assemblage-header', { y: -20, opacity: 0, duration: 0.5 });
+    tl.from('.assemblage-stat', { y: 24, opacity: 0, stagger: 0.08, duration: 0.5 }, '-=0.2');
+    tl.from('.assemblage-card', { y: 24, opacity: 0, stagger: 0.1, duration: 0.5 }, '-=0.2');
+  }, { scope: containerRef, dependencies: [isLoading] });
+
   return (
-    <div className="min-h-screen bg-[#F5F3EF]">
+    <div ref={containerRef} className="min-h-screen bg-[#F5F3EF]">
       {/* Inject pulse-ring keyframe */}
       <style>{PULSE_STYLE}</style>
 
       {/* px-4 on mobile, px-6 on sm+ */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6">
         {/* Page header — flex-wrap prevents overflow on narrow screens */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="assemblage-header flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-[#1A1714] tracking-tight flex items-center gap-2">
               <GitMerge size={22} className="text-[#8B1A2F] flex-shrink-0" /> Assemblage IA
@@ -1053,7 +1065,7 @@ export default function AssemblageAI() {
               { label: 'Scénarios prêts', value: plans.filter(p => p.status === 'scenarios_ready').length, color: 'text-green-600' },
               { label: 'Exécutés', value: plans.filter(p => p.status === 'executed').length, color: 'text-blue-600' },
             ].map(s => (
-              <div key={s.label} className="bg-white rounded-xl border border-[#E8E4DE] px-4 py-3">
+              <div key={s.label} className="assemblage-stat bg-white rounded-xl border border-[#E8E4DE] px-4 py-3">
                 <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
                 <div className="text-xs text-[#9B9590]">{s.label}</div>
               </div>

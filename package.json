@@ -12,5 +12,8 @@
     "dev:frontend": "cd frontend && npm run dev",
     "setup": "npm run install:all && npm run migrate && npm run build",
     "test": "echo 'No tests configured yet'"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
   }
 }

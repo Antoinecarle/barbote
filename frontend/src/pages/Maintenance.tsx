@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Wrench, Plus, Calendar, List, X, AlertTriangle } from 'lucide-react';
 
 const MAINTENANCE_TYPES: Record<string, string> = {
@@ -46,6 +49,7 @@ export default function Maintenance() {
   const [filterStatus, setFilterStatus] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table');
   const queryClient = useQueryClient();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: maintenance = [], isLoading } = useQuery({
     queryKey: ['maintenance'],
@@ -69,12 +73,25 @@ export default function Maintenance() {
     byMonth[key].push(m);
   });
 
+  useGSAP(() => {
+    if (isLoading) return;
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.maint-header', { y: -20, opacity: 0, duration: 0.5 });
+    tl.from('.maint-stat', { y: 24, opacity: 0, stagger: 0.08, duration: 0.5 }, '-=0.2');
+    tl.from('.maint-toolbar', { y: 16, opacity: 0, duration: 0.4 }, '-=0.2');
+
+    gsap.from('.maint-content', {
+      scrollTrigger: { trigger: '.maint-content', start: 'top 85%', once: true },
+      y: 30, opacity: 0, duration: 0.6,
+    });
+  }, { scope: containerRef, dependencies: [isLoading, viewMode] });
+
   return (
-    <div className="min-h-screen bg-[#F5F3EF]">
+    <div ref={containerRef} className="min-h-screen bg-[#F5F3EF]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-4 sm:space-y-6">
 
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="maint-header flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1
               className="text-2xl font-bold text-[#1A1714] tracking-tight flex items-center gap-2"
@@ -127,7 +144,7 @@ export default function Maintenance() {
           ].map(stat => (
             <div
               key={stat.label}
-              className="bg-white border border-[#E8E4DE] rounded-xl p-4 shadow-sm"
+              className="maint-stat bg-white border border-[#E8E4DE] rounded-xl p-4 shadow-sm"
             >
               <p className="text-xs font-medium text-[#5C5550] uppercase tracking-wide mb-2">{stat.label}</p>
               <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
@@ -136,7 +153,7 @@ export default function Maintenance() {
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="maint-toolbar flex flex-wrap items-center gap-2 sm:gap-3">
           <select
             className="bg-white border border-[#E8E4DE] rounded-lg px-3 py-2 text-sm text-[#1A1714] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B1A2F]/20 focus:border-[#8B1A2F] transition-colors"
             value={filterStatus}
@@ -179,7 +196,7 @@ export default function Maintenance() {
         {viewMode === 'table' && (
           <>
             {/* Desktop Table — hidden on mobile */}
-            <div className="hidden md:block bg-white border border-[#E8E4DE] rounded-xl shadow-sm overflow-hidden">
+            <div className="maint-content hidden md:block bg-white border border-[#E8E4DE] rounded-xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[500px]">
                   <thead>

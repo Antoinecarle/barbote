@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Activity, ArrowLeftRight, FlaskConical, Filter, RefreshCw } from 'lucide-react';
 
 const MOVEMENT_LABELS: Record<string, string> = {
@@ -43,6 +46,7 @@ function formatRelativeDate(dateStr: string): string {
 
 export default function ActivityPage() {
   const [filterType, setFilterType] = useState<'all' | 'movement' | 'operation'>('all');
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: activity, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['activity'],
@@ -87,12 +91,24 @@ export default function ActivityPage() {
 
   const dayKeys = Object.keys(grouped);
 
+  useGSAP(() => {
+    if (isLoading) return;
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.activity-header', { y: -20, opacity: 0, duration: 0.5 });
+    tl.from('.activity-filters', { y: 16, opacity: 0, duration: 0.4 }, '-=0.2');
+
+    gsap.from('.activity-feed', {
+      scrollTrigger: { trigger: '.activity-feed', start: 'top 85%', once: true },
+      y: 30, opacity: 0, duration: 0.6,
+    });
+  }, { scope: containerRef, dependencies: [isLoading] });
+
   return (
-    <div className="min-h-screen bg-[#F5F3EF]">
+    <div ref={containerRef} className="min-h-screen bg-[#F5F3EF]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6">
 
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="activity-header flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1
               className="text-2xl font-bold text-[#1A1714] tracking-tight flex items-center gap-2"
@@ -116,7 +132,7 @@ export default function ActivityPage() {
         </div>
 
         {/* Filter tabs */}
-        <div className="flex items-center gap-1 bg-white border border-[#E8E4DE] rounded-lg p-1 shadow-sm overflow-x-auto">
+        <div className="activity-filters flex items-center gap-1 bg-white border border-[#E8E4DE] rounded-lg p-1 shadow-sm overflow-x-auto">
           {([
             { key: 'all', label: 'Tout', count: allEvents.length },
             { key: 'movement', label: 'Mouvements', count: allEvents.filter(e => e.event_type === 'movement').length },
@@ -144,7 +160,7 @@ export default function ActivityPage() {
         </div>
 
         {/* Activity feed */}
-        <div className="bg-white border border-[#E8E4DE] rounded-xl shadow-sm overflow-hidden">
+        <div className="activity-feed bg-white border border-[#E8E4DE] rounded-xl shadow-sm overflow-hidden">
           {isLoading ? (
             <div className="p-6 space-y-5">
               {Array.from({ length: 6 }).map((_, i) => (

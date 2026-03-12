@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, streamApi } from '../lib/api';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -661,15 +663,28 @@ export default function AIChat() {
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // GSAP
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.aichat-header', { y: -16, opacity: 0, duration: 0.4 });
+    tl.from('.aichat-sidebar', { x: -20, opacity: 0, duration: 0.5 }, '-=0.2');
+    tl.from('.aichat-main', { y: 20, opacity: 0, duration: 0.5 }, '-=0.3');
+  }, { scope: chatContainerRef });
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // RENDER
   // ─────────────────────────────────────────────────────────────────────────────
 
   // ── Chat area (shared across all breakpoints) ──
   const chatArea = (
-    <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <main className="aichat-main flex-1 flex flex-col min-w-0 overflow-hidden">
 
       {/* Conversation header */}
-      <div className="bg-[#FDFCFA] border-b border-[#E8E4DE] px-3 sm:px-6 py-3 flex items-center justify-between shrink-0 min-h-[56px]">
+      <div className="aichat-header bg-[#FDFCFA] border-b border-[#E8E4DE] px-3 sm:px-6 py-3 flex items-center justify-between shrink-0 min-h-[56px]">
         {/* Mobile: back button + title OR new chat button */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {/* Mobile back arrow when conversation is active */}
@@ -977,7 +992,7 @@ export default function AIChat() {
   );
 
   return (
-    <>
+    <div ref={chatContainerRef}>
       {/* ═══════════════════════════════════════════════════════════════════════
           MOBILE LAYOUT (< 640px) — full-screen panels with bottom tab bar
       ═══════════════════════════════════════════════════════════════════════ */}
@@ -1105,7 +1120,7 @@ export default function AIChat() {
         style={{ height: 'calc(100vh - 80px)' }}
       >
         {/* ── LEFT COLUMN: Conversation list (w-64) ── */}
-        <aside className="w-64 bg-[#FDFCFA] border-r border-[#E8E4DE] flex flex-col shrink-0">
+        <aside className="aichat-sidebar w-64 bg-[#FDFCFA] border-r border-[#E8E4DE] flex flex-col shrink-0">
           <ConversationList
             conversations={filteredConversations}
             activeConvId={activeConvId}
@@ -1139,6 +1154,6 @@ export default function AIChat() {
           </aside>
         )}
       </div>
-    </>
+    </div>
   );
 }

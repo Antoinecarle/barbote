@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Package, Plus, Search, Grid3X3, List, X } from 'lucide-react';
 
 const CONTAINER_TYPES: Record<string, string> = {
@@ -35,6 +38,7 @@ export default function Containers() {
   const [showCreate, setShowCreate] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const queryClient = useQueryClient();
+  const container = useRef<HTMLDivElement>(null);
 
   const { data: containers = [], isLoading } = useQuery({
     queryKey: ['containers', filterStatus, filterType],
@@ -52,12 +56,25 @@ export default function Containers() {
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  useGSAP(() => {
+    if (isLoading) return;
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.containers-header', { y: -20, opacity: 0, duration: 0.5 });
+    tl.from('.containers-filters', { y: 16, opacity: 0, duration: 0.4 }, '-=0.2');
+    tl.from('.container-card', { y: 24, opacity: 0, stagger: 0.08, duration: 0.5 }, '-=0.2');
+
+    gsap.from('.containers-table', {
+      scrollTrigger: { trigger: '.containers-table', start: 'top 85%', once: true },
+      y: 30, opacity: 0, duration: 0.6,
+    });
+  }, { scope: container, dependencies: [isLoading, viewMode] });
+
   return (
-    <div className="min-h-screen bg-[#F5F3EF]">
+    <div ref={container} className="min-h-screen bg-[#F5F3EF]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6">
 
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="containers-header flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1
               className="text-2xl font-bold tracking-tight flex items-center gap-2"
@@ -86,7 +103,7 @@ export default function Containers() {
         </div>
 
         {/* Filters */}
-        <div className="space-y-2 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+        <div className="containers-filters space-y-2 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
           {/* Row 1: Search (full width on mobile) */}
           <div className="relative w-full sm:flex-1 sm:min-w-0" style={{ maxWidth: '320px' }}>
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9B9590' }} />
@@ -205,7 +222,7 @@ export default function Containers() {
                 return (
                   <div
                     key={c.id}
-                    className="bg-white rounded-xl p-5 cursor-pointer transition-all duration-200"
+                    className="container-card bg-white rounded-xl p-5 cursor-pointer transition-all duration-200"
                     style={{
                       border: '1px solid #E8E4DE',
                       boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)',
@@ -286,7 +303,7 @@ export default function Containers() {
         {/* Table View */}
         {viewMode === 'table' && (
           <div
-            className="bg-white rounded-xl overflow-hidden"
+            className="containers-table bg-white rounded-xl overflow-hidden"
             style={{
               border: '1px solid #E8E4DE',
               boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)',

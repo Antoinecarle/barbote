@@ -1,21 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { FlaskConical, Plus, Calculator } from 'lucide-react';
 
 export default function Analyses() {
   const [showCreate, setShowCreate] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
   const queryClient = useQueryClient();
+  const container = useRef<HTMLDivElement>(null);
 
   const { data: analyses = [], isLoading } = useQuery({
     queryKey: ['analyses'],
     queryFn: () => api<any[]>('/analyses'),
   });
 
+  useGSAP(() => {
+    if (isLoading) return;
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.analyses-header', { y: -20, opacity: 0, duration: 0.5 });
+    tl.from('.analyses-table', { y: 24, opacity: 0, duration: 0.5 }, '-=0.2');
+    tl.from('.analyses-card', { y: 24, opacity: 0, stagger: 0.08, duration: 0.5 }, '-=0.3');
+  }, { scope: container, dependencies: [isLoading] });
+
   return (
-    <div className="space-y-6 animate-fade-in px-4 sm:px-6">
-      <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
+    <div ref={container} className="space-y-6 px-4 sm:px-6">
+      <div className="analyses-header flex flex-wrap items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#1A1714] flex items-center gap-2" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>
             <FlaskConical size={22} className="text-[#8B1A2F]" />
@@ -50,7 +62,7 @@ export default function Analyses() {
       </div>
 
       {/* Desktop table — hidden on mobile */}
-      <div className="hidden md:block bg-white border border-[#E8E4DE] rounded-xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}>
+      <div className="analyses-table hidden md:block bg-white border border-[#E8E4DE] rounded-xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)' }}>
       <div className="overflow-x-auto">
         <table className="w-full min-w-max">
           <thead>
@@ -112,7 +124,7 @@ export default function Analyses() {
             <p className="text-sm text-[#9B9590]">Aucune analyse</p>
           </div>
         ) : analyses.map((a: any) => (
-          <div key={a.id} className="bg-white rounded-xl border border-[#E8E4DE] p-4" style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.06)' }}>
+          <div key={a.id} className="analyses-card bg-white rounded-xl border border-[#E8E4DE] p-4" style={{ boxShadow: '0 1px 3px rgba(26,23,20,0.06)' }}>
             <div className="flex items-start justify-between gap-2 mb-2">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-[#1A1714] truncate">{a.lot_number}</p>

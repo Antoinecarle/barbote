@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Wine, Plus, Search, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -50,6 +53,7 @@ export default function Lots() {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const container = useRef<HTMLDivElement>(null);
 
   const { data: lots = [], isLoading } = useQuery({
     queryKey: ['lots', filterStatus, filterType],
@@ -84,13 +88,26 @@ export default function Lots() {
     setPage(1);
   };
 
+  useGSAP(() => {
+    if (isLoading) return;
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.lots-header', { y: -20, opacity: 0, duration: 0.5 });
+    tl.from('.lots-stat', { y: 24, opacity: 0, stagger: 0.08, duration: 0.5 }, '-=0.2');
+    tl.from('.lots-toolbar', { y: 16, opacity: 0, duration: 0.4 }, '-=0.2');
+
+    gsap.from('.lots-table', {
+      scrollTrigger: { trigger: '.lots-table', start: 'top 85%', once: true },
+      y: 30, opacity: 0, duration: 0.6,
+    });
+  }, { scope: container, dependencies: [isLoading] });
+
   return (
-    <div className="min-h-screen bg-[#F5F3EF]">
+    <div ref={container} className="min-h-screen bg-[#F5F3EF]">
       {/* Responsive horizontal padding: px-4 on mobile, px-6 on sm+ */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
 
         {/* Page header — flex-wrap keeps button from overflowing */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="lots-header flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1
               className="text-xl sm:text-2xl font-semibold tracking-tight"
@@ -128,7 +145,7 @@ export default function Lots() {
           ].map(stat => (
             <div
               key={stat.label}
-              className="bg-white rounded-xl border px-4 py-3"
+              className="lots-stat bg-white rounded-xl border px-4 py-3"
               style={{ borderColor: stat.border }}
             >
               <p className="text-xs font-medium truncate" style={{ color: stat.color }}>{stat.label}</p>
@@ -138,7 +155,7 @@ export default function Lots() {
         </div>
 
         {/* Toolbar — wraps cleanly on mobile; search gets flex-1 with min-w-0 */}
-        <div className="flex flex-wrap gap-2">
+        <div className="lots-toolbar flex flex-wrap gap-2">
           <div className="relative flex-1 min-w-0" style={{ minWidth: '160px' }}>
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#9B9590' }} />
             <input
@@ -181,7 +198,7 @@ export default function Lots() {
 
         {/* Table — overflow-x-auto enables horizontal scroll on mobile; min-w-[640px] keeps layout intact */}
         <div
-          className="bg-white rounded-xl overflow-hidden"
+          className="lots-table bg-white rounded-xl overflow-hidden"
           style={{
             border: '1px solid #E8E4DE',
             boxShadow: '0 1px 3px rgba(26,23,20,0.08), 0 4px 12px rgba(26,23,20,0.05)',

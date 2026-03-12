@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../lib/auth';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 interface LoginProps {
   onLoginSuccess?: () => void;
@@ -12,6 +14,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const container = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,11 +45,19 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     }
   };
 
+  useGSAP(() => {
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+    tl.from('.login-brand', { x: -40, opacity: 0, duration: 0.7 });
+    tl.from('.login-form-card', { y: 30, opacity: 0, duration: 0.6 }, '-=0.4');
+    tl.from('.login-field', { y: 16, opacity: 0, stagger: 0.1, duration: 0.4 }, '-=0.3');
+    tl.from('.login-submit', { y: 12, opacity: 0, duration: 0.4 }, '-=0.1');
+  }, { scope: container });
+
   return (
-    <div className="min-h-screen flex" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div ref={container} className="min-h-screen flex" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
       {/* Left panel — wine-red brand panel */}
       <div
-        className="hidden lg:flex lg:w-5/12 xl:w-1/2 flex-col items-center justify-center relative overflow-hidden"
+        className="login-brand hidden lg:flex lg:w-5/12 xl:w-1/2 flex-col items-center justify-center relative overflow-hidden"
         style={{ backgroundColor: '#8B1A2F' }}
       >
         {/* Subtle decorative dot pattern overlay */}
@@ -100,7 +111,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         </div>
 
         {/* Form card */}
-        <div className="w-full max-w-sm">
+        <div className="login-form-card w-full max-w-sm">
           {/* Heading */}
           <div className="mb-8">
             <h2 className="text-2xl font-semibold tracking-tight" style={{ color: '#111827' }}>
@@ -141,7 +152,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email field */}
-            <div>
+            <div className="login-field">
               <label
                 htmlFor="email"
                 className="block text-sm font-medium mb-1.5"
@@ -175,7 +186,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             </div>
 
             {/* Password field */}
-            <div>
+            <div className="login-field">
               <label
                 htmlFor="password"
                 className="block text-sm font-medium mb-1.5"
@@ -212,7 +223,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
+              className="login-submit w-full rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
               style={{
                 backgroundColor: loading ? '#A0394E' : '#8B1A2F',
                 cursor: loading ? 'not-allowed' : 'pointer',

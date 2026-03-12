@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   ArrowLeft, Wine, FlaskConical, ArrowLeftRight, GitBranch, Package,
 } from 'lucide-react';
@@ -77,6 +80,7 @@ export default function LotDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabKey>('overview');
+  const container = useRef<HTMLDivElement>(null);
 
   const { data: lot, isLoading } = useQuery({
     queryKey: ['lot', id],
@@ -124,12 +128,20 @@ export default function LotDetail() {
     { key: 'traceability', label: 'Traçabilité',  icon: GitBranch    },
   ];
 
+  useGSAP(() => {
+    if (!lot) return;
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    tl.from('.lotdetail-header', { y: -20, opacity: 0, duration: 0.5 });
+    tl.from('.lotdetail-tabs', { y: 16, opacity: 0, duration: 0.4 }, '-=0.2');
+    tl.from('.lotdetail-content', { y: 24, opacity: 0, stagger: 0.1, duration: 0.5 }, '-=0.2');
+  }, { scope: container, dependencies: [lot, tab] });
+
   return (
-    <div>
+    <div ref={container}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6">
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+        <div className="lotdetail-header flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
           <button
             onClick={() => navigate('/lots')}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-[#5C5550] bg-white border border-[#E8E4DE] hover:bg-[#F5F3EF] shadow-sm transition-colors flex-shrink-0 sm:mt-0.5"
@@ -171,7 +183,7 @@ export default function LotDetail() {
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-[#E8E4DE] bg-white rounded-t-xl px-2">
+        <div className="lotdetail-tabs border-b border-[#E8E4DE] bg-white rounded-t-xl px-2">
           <nav className="flex -mb-px gap-1 overflow-x-auto scrollbar-none">
             {TABS.map(({ key, label, icon: Icon }) => (
               <button
@@ -193,7 +205,7 @@ export default function LotDetail() {
 
         {/* ─── OVERVIEW ─── */}
         {tab === 'overview' && (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="lotdetail-content grid grid-cols-1 xl:grid-cols-3 gap-6">
             {/* Main info card */}
             <div
               className="xl:col-span-2 bg-white rounded-xl border border-[#E8E4DE] p-4 sm:p-6 space-y-6"
