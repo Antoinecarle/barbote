@@ -13,3 +13,4 @@ tmp/
 # AI chat uploads
 .uploads/
 core.*
+.github/
