@@ -255,6 +255,220 @@ router.post('/assemblage', verifyToken, async (req, res) => {
   }
 });
 
+// POST /api/ai/matrix/recalculate - Calculate blended wine matrix from lot proportions
+// Body: { lots: [{lot_id, percentage}] }
+// Returns: { matrix, lot_details }
+router.post('/matrix/recalculate', verifyToken, async (req, res) => {
+  try {
+    const { lots } = req.body; // [{lot_id, percentage}]
+    if (!Array.isArray(lots) || lots.length === 0) {
+      return res.status(400).json({ error: 'Paramètre lots requis' });
+    }
+
+    // Validate percentages sum to 100 (±1 tolerance)
+    const totalPct = lots.reduce((s, l) => s + Number(l.percentage || 0), 0);
+    if (Math.abs(totalPct - 100) > 1) {
+      return res.status(400).json({ error: `La somme des pourcentages doit être 100% (reçu: ${totalPct}%)` });
+    }
+
+    const lotIds = lots.map(l => l.lot_id);
+
+    // Fetch lots with their latest analysis
+    const lotsRes = await query(
+      `SELECT l.id, l.lot_number, l.name, l.current_volume_liters,
+        a.alcohol_percent, a.total_acidity_gl, a.volatile_acidity_gl,
+        a.ph, a.free_so2_mgl, a.total_so2_mgl, a.residual_sugar_gl,
+        a.malic_acid_gl, a.lactic_acid_gl, a.tartaric_acid_gl,
+        a.density, a.analysis_date
+       FROM barbote_lots l
+       LEFT JOIN LATERAL (
+         SELECT * FROM barbote_analyses
+         WHERE lot_id = l.id
+         ORDER BY analysis_date DESC LIMIT 1
+       ) a ON true
+       WHERE l.id = ANY($1)`,
+      [lotIds]
+    );
+
+    const lotMap = Object.fromEntries(lotsRes.rows.map(r => [r.id, r]));
+    const PARAMS = [
+      'alcohol_percent', 'total_acidity_gl', 'ph',
+      'free_so2_mgl', 'total_so2_mgl', 'residual_sugar_gl',
+      'malic_acid_gl', 'lactic_acid_gl', 'tartaric_acid_gl', 'density'
+    ];
+
+    const matrix = {};
+    for (const param of PARAMS) {
+      if (param === 'volatile_acidity_gl') {
+        // Volatile acidity: take max (not averaged)
+        const vals = lots.map(l => Number(lotMap[l.lot_id]?.[param])).filter(v => !isNaN(v));
+        if (vals.length) matrix[param] = Math.max(...vals);
+      } else {
+        let weightedSum = 0, totalWeight = 0;
+        for (const l of lots) {
+          const lot = lotMap[l.lot_id];
+          const val = lot?.[param];
+          if (val != null && !isNaN(Number(val))) {
+            const pct = Number(l.percentage);
+            weightedSum += Number(val) * pct;
+            totalWeight += pct;
+          }
+        }
+        if (totalWeight > 0) {
+          matrix[param] = Math.round((weightedSum / totalWeight) * 1000) / 1000;
+        }
+      }
+    }
+
+    // Also compute volatile_acidity_gl max
+    const vaVals = lots.map(l => Number(lotMap[l.lot_id]?.volatile_acidity_gl)).filter(v => !isNaN(v) && v > 0);
+    if (vaVals.length) matrix.volatile_acidity_gl = Math.max(...vaVals);
+
+    res.json({
+      matrix,
+      lot_details: lots.map(l => ({
+        lot_id: l.lot_id,
+        lot_number: lotMap[l.lot_id]?.lot_number || '?',
+        name: lotMap[l.lot_id]?.name || '?',
+        percentage: l.percentage,
+        has_analysis: !!(lotMap[l.lot_id]?.analysis_date),
+        analysis_date: lotMap[l.lot_id]?.analysis_date || null,
+      })),
+    });
+  } catch (err) {
+    console.error('Matrix recalculation error:', err);
+    res.status(500).json({ error: 'Erreur recalcul matrice: ' + err.message });
+  }
+});
+
+// POST /api/ai/assemblage/:id/execute - Execute a scenario: create lot + movements
+// Body: { scenario_id, new_lot_name, notes }
+router.post('/assemblage/:id/execute', verifyToken, async (req, res) => {
+  try {
+    const { scenario_id, new_lot_name, notes } = req.body;
+    if (!scenario_id) return res.status(400).json({ error: 'scenario_id requis' });
+
+    // Fetch the assemblage plan
+    const planRes = await query('SELECT * FROM barbote_assemblage_plans WHERE id = $1', [req.params.id]);
+    if (planRes.rows.length === 0) return res.status(404).json({ error: 'Plan non trouvé' });
+    const plan = planRes.rows[0];
+
+    if (plan.status === 'executed') {
+      return res.status(409).json({ error: 'Ce plan a déjà été exécuté' });
+    }
+
+    const scenarios = plan.scenarios || [];
+    const scenario = scenarios.find(s => s.id === scenario_id);
+    if (!scenario) return res.status(404).json({ error: 'Scénario non trouvé' });
+
+    const scenarioLots = scenario.lots ?? scenario.blend ?? [];
+    if (scenarioLots.length === 0) {
+      return res.status(400).json({ error: 'Le scénario ne contient aucun lot' });
+    }
+
+    // Validate source lot volumes
+    const lotIds = scenarioLots.map(l => l.lot_id);
+    const sourceLotsRes = await query(
+      'SELECT id, lot_number, current_volume_liters FROM barbote_lots WHERE id = ANY($1)',
+      [lotIds]
+    );
+    const lotVolumeMap = Object.fromEntries(sourceLotsRes.rows.map(r => [r.id, r]));
+
+    for (const sl of scenarioLots) {
+      const available = Number(lotVolumeMap[sl.lot_id]?.current_volume_liters ?? 0);
+      const needed = Number(sl.volume_liters ?? 0);
+      if (needed > available + 1) { // 1L tolerance for rounding
+        return res.status(400).json({
+          error: `Volume insuffisant pour lot ${lotVolumeMap[sl.lot_id]?.lot_number ?? sl.lot_id}: besoin ${needed}L, disponible ${available}L`
+        });
+      }
+    }
+
+    const totalVolume = scenarioLots.reduce((s, l) => s + Number(l.volume_liters ?? 0), 0);
+
+    // Create the new assembled lot
+    const newLotRes = await query(
+      `INSERT INTO barbote_lots
+         (lot_number, name, type, initial_volume_liters, current_volume_liters,
+          analysis_matrix, quality_score, parent_lots, origin_lot_ids,
+          notes, status, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'active',$11)
+       RETURNING *`,
+      [
+        `ASS-${Date.now()}`,
+        new_lot_name || `Assemblage - ${plan.name}`,
+        plan.target_analysis?.type || 'rouge',
+        totalVolume,
+        totalVolume,
+        JSON.stringify(scenario.predicted_analysis || {}),
+        scenario.quality_score || null,
+        JSON.stringify(scenarioLots.map(l => ({
+          lot_id: l.lot_id,
+          lot_number: l.lot_number,
+          percentage: l.percentage,
+          volume_liters: l.volume_liters,
+        }))),
+        lotIds,
+        notes || `Créé depuis plan assemblage IA: ${plan.name} — Scénario: ${scenario.name}`,
+        req.user.id,
+      ]
+    );
+    const newLot = newLotRes.rows[0];
+
+    // Deduct volumes from source lots
+    for (const sl of scenarioLots) {
+      await query(
+        `UPDATE barbote_lots
+         SET current_volume_liters = current_volume_liters - $1, updated_at = NOW()
+         WHERE id = $2`,
+        [Number(sl.volume_liters ?? 0), sl.lot_id]
+      );
+    }
+
+    // Create a movement record for the assemblage
+    await query(
+      `INSERT INTO barbote_movements
+         (movement_type, volume_liters, source_lots, target_lot_id, date,
+          operator_id, post_analysis, reason, notes, validated, validated_by, validated_at, created_by)
+       VALUES ('assemblage',$1,$2,$3,NOW(),$4,$5,$6,$7,true,$4,NOW(),$4)`,
+      [
+        totalVolume,
+        JSON.stringify(scenarioLots.map(l => ({
+          lot_id: l.lot_id,
+          lot_number: l.lot_number,
+          volume: l.volume_liters,
+          percentage: l.percentage,
+        }))),
+        newLot.id,
+        req.user.id,
+        JSON.stringify(scenario.predicted_analysis || {}),
+        `Exécution plan assemblage IA: ${plan.name}`,
+        notes || `Scénario "${scenario.name}" — Score qualité: ${scenario.quality_score ?? 'N/A'}`,
+      ]
+    );
+
+    // Mark plan as executed
+    await query(
+      `UPDATE barbote_assemblage_plans
+       SET status = 'executed', executed_scenario_id = $1, executed_at = NOW(), updated_at = NOW()
+       WHERE id = $2`,
+      [scenario_id, plan.id]
+    );
+
+    res.json({
+      success: true,
+      new_lot: newLot,
+      movement_created: true,
+      plan_id: plan.id,
+      scenario_used: scenario.name,
+      volume_assembled: totalVolume,
+    });
+  } catch (err) {
+    console.error('Assemblage execute error:', err);
+    res.status(500).json({ error: 'Erreur exécution assemblage: ' + err.message });
+  }
+});
+
 // GET /api/ai/assemblage/:id - Get assemblage plan
 router.get('/assemblage/:id', verifyToken, async (req, res) => {
   try {

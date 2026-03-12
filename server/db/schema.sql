@@ -179,6 +179,8 @@ CREATE TABLE IF NOT EXISTS barbote_assemblage_plans (
   selected_scenario_id VARCHAR(100),
   -- Execution
   status VARCHAR(50) DEFAULT 'draft' CHECK (status IN ('draft', 'pending_ai', 'scenarios_ready', 'approved', 'executed', 'cancelled')),
+  executed_scenario_id VARCHAR(100),
+  executed_at TIMESTAMPTZ,
   ai_model_used VARCHAR(100),
   ai_prompt_version VARCHAR(50),
   notes TEXT,

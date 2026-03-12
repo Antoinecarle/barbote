@@ -268,6 +268,7 @@ interface CompilationPanelProps {
   messages: Message[];
   exportingId: string | null;
   onExportSynthesis: () => void;
+  onExportCSV: () => void;
   onClose?: () => void;
   showCloseButton?: boolean;
 }
@@ -280,6 +281,7 @@ function CompilationPanel({
   messages,
   exportingId,
   onExportSynthesis,
+  onExportCSV,
   onClose,
   showCloseButton,
 }: CompilationPanelProps) {
@@ -338,20 +340,12 @@ function CompilationPanel({
             Exporter PDF
           </button>
           <button
-            disabled={!activeConvId}
-            onClick={() => {/* CSV export stub */}}
+            disabled={!activeConvId || !messages.length}
+            onClick={onExportCSV}
             className="btn-secondary w-full justify-start text-sm py-2.5 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
           >
             <Table2 size={14} className="text-green-600" />
             Exporter CSV
-          </button>
-          <button
-            disabled={!activeConvId}
-            onClick={() => {/* Excel export stub */}}
-            className="btn-secondary w-full justify-start text-sm py-2.5 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
-          >
-            <Download size={14} className="text-blue-600" />
-            Exporter Excel
           </button>
         </div>
       </div>
@@ -589,15 +583,14 @@ export default function AIChat() {
     }
   };
 
-  // ── Export synthesis ──
+  // ── Export synthesis (Markdown) ──
   const exportSynthesis = async (convId?: string) => {
     const targetId = convId || activeConvId;
     if (!targetId) return;
     setExportingId(targetId);
     try {
       const result = await api<{ content: string; filename?: string }>(
-        `/ai/conversations/${targetId}/synthesis`,
-        { method: 'POST' }
+        `/ai/conversations/${targetId}/synthesis`
       );
       const blob = new Blob([result.content], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
@@ -607,10 +600,32 @@ export default function AIChat() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      // silently fail — synthesis not available
+      // silently fail
     } finally {
       setExportingId(null);
     }
+  };
+
+  // ── Export CSV (messages du conversation) ──
+  const exportCSV = () => {
+    if (!messages.length) return;
+    const conv = conversations.find(c => c.id === activeConvId);
+    const header = ['Role', 'Message', 'Date'];
+    const rows = messages.map(m => [
+      m.role === 'user' ? 'Utilisateur' : 'Assistant IA',
+      `"${(m.content ?? '').replace(/"/g, '""').replace(/\n/g, ' ')}"`,
+      new Date().toLocaleDateString('fr-FR'),
+    ]);
+    const csv = [header, ...rows].map(r => r.join(';')).join('\n');
+    const bom = '\uFEFF'; // BOM for Excel UTF-8 compatibility
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const title = conv?.title?.replace(/[^a-z0-9]/gi, '-').toLowerCase() || 'conversation';
+    a.download = `${title}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   // ── Filtered conversations ──
@@ -1004,6 +1019,7 @@ export default function AIChat() {
                 messages={messages}
                 exportingId={exportingId}
                 onExportSynthesis={() => exportSynthesis()}
+                onExportCSV={exportCSV}
                 onClose={() => setMobileView('chat')}
                 showCloseButton={true}
               />
@@ -1116,6 +1132,7 @@ export default function AIChat() {
               messages={messages}
               exportingId={exportingId}
               onExportSynthesis={() => exportSynthesis()}
+              onExportCSV={exportCSV}
               onClose={() => setRightPanelOpen(false)}
               showCloseButton={false}
             />
