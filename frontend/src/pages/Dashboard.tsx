@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   Wine, Package, ArrowLeftRight, Activity, TrendingUp, FlaskConical,
   Layers, ChevronRight, GitMerge, Sparkles, BarChart3, Zap,
@@ -220,6 +223,7 @@ function KpiCard({ icon: Icon, label, value, sub, accentColor, bgTint, onClick, 
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      className="kpi-card"
       style={{
         background: '#FFFFFF',
         border: `1px solid ${hovered ? accentColor + '40' : '#E8E4DE'}`,
@@ -525,6 +529,7 @@ function FeedRow({ dot, title, sub, right, rightSub }: {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const dashboardRef = useRef<HTMLDivElement>(null);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboard-stats'],
@@ -570,8 +575,41 @@ export default function Dashboard() {
   });
   const todayCapitalized = todayStr.charAt(0).toUpperCase() + todayStr.slice(1);
 
+  // ── GSAP entrance animations ──
+  useGSAP(() => {
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+
+    // Header reveal
+    tl.from('.dash-header', { y: -20, opacity: 0, duration: 0.5 });
+
+    // KPI cards stagger
+    tl.from('.kpi-card', {
+      y: 24, opacity: 0, stagger: 0.08, duration: 0.5,
+    }, '-=0.2');
+
+    // Charts section reveal on scroll
+    gsap.from('.dash-charts', {
+      scrollTrigger: {
+        trigger: '.dash-charts',
+        start: 'top 85%',
+        once: true,
+      },
+      y: 30, opacity: 0, duration: 0.6,
+    });
+
+    // Activity section
+    gsap.from('.dash-activity', {
+      scrollTrigger: {
+        trigger: '.dash-activity',
+        start: 'top 85%',
+        once: true,
+      },
+      y: 30, opacity: 0, duration: 0.6, delay: 0.1,
+    });
+  }, { scope: dashboardRef, dependencies: [statsLoading] });
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div ref={dashboardRef} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
       {/* ── Keyframe styles + responsive overrides ──────────────────────────── */}
       <style>{`
@@ -744,7 +782,7 @@ export default function Dashboard() {
           1. HERO SECTION
       ══════════════════════════════════════════════════════════════════════ */}
       <div
-        className="hero-section"
+        className="hero-section dash-header"
         style={{
           background: 'linear-gradient(135deg, #1A1714 0%, #2D1A20 45%, #3D1028 100%)',
           borderRadius: '20px',
@@ -934,7 +972,7 @@ export default function Dashboard() {
         </h2>
         <div style={{ width: '32px', height: '3px', borderRadius: '2px', background: 'linear-gradient(90deg, #1D4ED8, #16A34A)' }} />
       </div>
-      <div className="analytics-grid">
+      <div className="analytics-grid dash-charts">
         {/* Area chart */}
         <SectionCard title="Volume des mouvements — 14 derniers jours" icon={TrendingUp}>
           {chartData.length > 0 ? (
@@ -1054,7 +1092,7 @@ export default function Dashboard() {
       {/* ══════════════════════════════════════════════════════════════════════
           5. BOTTOM ROW — capacity gauge + movements feed + operations feed
       ══════════════════════════════════════════════════════════════════════ */}
-      <div style={{
+      <div className="dash-activity" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
         gap: '14px',

@@ -69,7 +69,7 @@ export default function Operations() {
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white shadow-sm transition-all duration-200"
+            className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-lg text-sm font-medium text-white shadow-sm transition-all duration-200"
             style={{ backgroundColor: '#8B1A2F' }}
             onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#6F1526')}
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#8B1A2F')}

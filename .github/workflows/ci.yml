@@ -1,0 +1,127 @@
+name: CI — Barbote
+
+on:
+  push:
+    branches: [main, dev, 'feat/**']
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ─── Frontend: TypeScript + Build ──────────────────────────────────────────
+  frontend:
+    name: Frontend (TS + Build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npx eslint src --ext .ts,.tsx --max-warnings 20
+        continue-on-error: true  # Warn but don't block for now
+
+      - name: Build (production)
+        run: npm run build
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 3
+
+  # ─── Backend: Syntax check ─────────────────────────────────────────────────
+  backend:
+    name: Backend (syntax)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install server deps
+        run: cd server && npm ci
+
+      - name: Syntax check — all server JS files
+        run: |
+          find server -name "*.js" -not -path "*/node_modules/*" | while read f; do
+            node --check "$f" && echo "✓ $f" || exit 1
+          done
+
+  # ─── Security: dependency audit ────────────────────────────────────────────
+  security:
+    name: Security audit
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Audit frontend dependencies
+        run: cd frontend && npm audit --audit-level=high
+        continue-on-error: true  # Report but don't block on moderate
+
+      - name: Audit server dependencies
+        run: cd server && npm audit --audit-level=high
+        continue-on-error: true
+
+  # ─── E2E Tests: Playwright ─────────────────────────────────────────────────
+  e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+    # Only run on main push (not on every feature branch push)
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install root deps (Playwright)
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run Playwright tests
+        run: npx playwright test --reporter=github
+        env:
+          CI: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
